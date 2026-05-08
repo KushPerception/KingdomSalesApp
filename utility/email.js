@@ -1,0 +1,1 @@
+export const defaultEmail = "delivery@kingdom.bh"

@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-blob-util/android/build.gradle b/node_modules/react-native-blob-util/android/build.gradle
+index 4e64dcd..7739ea8 100644
+--- a/node_modules/react-native-blob-util/android/build.gradle
++++ b/node_modules/react-native-blob-util/android/build.gradle
+@@ -78,7 +78,7 @@ android {
+     sourceSets {
+         main {
+             if (isNewArchitectureEnabled()) {
+-                java.srcDirs += ['src/newarch']
++                java.srcDirs += ['src/main/java', 'src/newarch']
+             } else {
+                 java.srcDirs += ['src/oldarch']
+             }
