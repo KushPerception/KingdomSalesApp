@@ -81,6 +81,7 @@ const Login = props => {
   };
 
   const OnClickSignIn = () => {
+    // props.navigation.navigate('MaterialRequestList');
     setloading(true);
     loginUser({ UserName, Password }, LoginCallback, setloading);
   };

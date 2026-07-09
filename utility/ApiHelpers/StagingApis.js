@@ -3,10 +3,10 @@ import { Alert } from "react-native";
 import { deleteSyncedSettledDriverOrder } from "../../Screens/db/driverOrders/crud";
 
 // Staging url 15-jul-2024
-// export const mainUrl = "https://kingdom.thatsmytask.com/";
+export const mainUrl = "https://kingdom.thatsmytask.com/";
 
 // production url 15-jul-2024
-export const mainUrl = "https://app.kingdom.bh:8443/";
+// export const mainUrl = "https://app.kingdom.bh:8443/";
 
 const StagApiUrl = `${mainUrl}api`;
 export const SignatureUrl = `${mainUrl}delivery-notes/`;
@@ -1715,6 +1715,187 @@ export const createCashReceipt = async (UserToken, receiptData) => {
     console.error("Error creating cash receipt:", error);
     throw error;
   }
+};
+
+
+export const getMaterialRequestDepartments = async (userToken, divname) => {
+  const url = `${StagApiUrl}/material-request/departments?divname=${encodeURIComponent(divname)}`;
+  console.log('getMaterialRequestDepartments URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('departments failed: ' + response.status);
+};
+
+export const getMaterialRequestPlants = async (userToken, department) => {
+  const url = `${StagApiUrl}/material-request/plants?department=${encodeURIComponent(department)}`;
+  console.log('getMaterialRequestPlants URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('plants failed: ' + response.status);
+};
+
+export const getMaterialRequestEquipments = async (userToken, plant) => {
+  const url = `${StagApiUrl}/material-request/equipments?plant=${encodeURIComponent(plant)}`;
+  console.log('getMaterialRequestEquipments URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('equipments failed: ' + response.status);
+};
+
+export const getMaterialRequestVehicles = async (userToken) => {
+  const url = `${StagApiUrl}/material-request/vehicles`;
+  console.log('getMaterialRequestVehicles URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('vehicles failed: ' + response.status);
+};
+
+export const getMaterialRequestJobDetails = async (userToken) => {
+  const url = `${StagApiUrl}/material-request/job-details`;
+  console.log('getMaterialRequestJobDetails URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('job-details failed: ' + response.status);
+};
+
+export const cancelMaterialRequestDraft = async (userToken, mrNo) => {
+  const url = `${StagApiUrl}/material-request/${mrNo}/cancel-draft`;
+  console.log('cancelMaterialRequestDraft URL:', url);
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('cancel-draft failed: ' + response.status);
+};
+
+export const getMaterialRequestGenerate = async (userToken) => {
+  const url = `${StagApiUrl}/material-request/generate`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('generate failed: ' + response.status);
+};
+
+export const getMaterialRequestDivisions = async (userToken) => {
+  const url = `${StagApiUrl}/material-request/divisions`;
+  console.log('getMaterialRequestDivisions URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('divisions failed: ' + response.status);
+};
+
+export const getMaterialRequestList = async (
+  userToken,
+  fromDate,
+  toDate,
+  division,
+  dept,
+  mrno,
+  list,
+  setList,
+  Page,
+  setPage,
+  setFooterLoading,
+  setNoMorePage,
+  setLoading
+) => {
+  setFooterLoading && setFooterLoading(true);
+  setLoading && setLoading(true);
+  const url = `${StagApiUrl}/material-request/list?from_date=${fromDate}&to_date=${toDate}&division=${division ?? ''}&dept=${dept ?? ''}&mrno=${mrno ?? ''}&per_page=20&page=${Page}`;
+  console.log({getMaterialRequestList: url});
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
+      },
+    });
+    if (response?.status === 200) {
+      const responseJson = await response.json();
+      console.log({getMaterialRequestListResponse: responseJson});
+      const lastPage = responseJson.data?.last_page;
+      const newData = list?.length > 0 ? [...list, ...(responseJson.data?.data ?? [])] : (responseJson.data?.data ?? []);
+      console.log({newData});
+      setList(newData);
+      if (Page >= lastPage) {
+        setNoMorePage(true);
+      } else {
+        setPage(Page + 1);
+        setNoMorePage(false);
+      }
+    } else {
+      const errText = await response.text();
+      console.error('getMaterialRequestList error status:', response.status, errText);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setFooterLoading && setFooterLoading(false);
+    setLoading && setLoading(false);
+  }
+};
+
+export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {
+  const url = `${StagApiUrl}/material-request/stocks?stock_code=${encodeURIComponent(stockCode)}&stock_name=${encodeURIComponent(stockName)}&per_page=50&page=${page}`;
+  console.log('getMaterialRequestStocks URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('stocks failed: ' + response.status);
 };
 
 export const updateCashReceipt = async (UserToken, receiptData) => {

@@ -90,6 +90,8 @@ const MPinOtp = props => {
       AsyncStorage.setItem('UserMPIN', MPin);
       if (UserRoleType === 'Driver') {
         props.navigation.navigate('DriverOrders');
+      } else if (UserRoleType === 'REQUESTER') {
+        props.navigation.navigate('MaterialRequestList');
       } else {
         props.navigation.navigate('Home');
       }

@@ -32,6 +32,10 @@ import CashReceipt from '../Screens/MainComponents/Home/CashReceipt';
 import DriverCashReceipt from '../Screens/MainComponents/Home/DriverCashReceipt';
 import CreateCashReceipt from '../Screens/MainComponents/Home/CreateCashReceipt';
 import EditCashReceipt from '../Screens/MainComponents/Home/EditCashReceipt';
+import MaterialRequestList from '../Screens/MainComponents/MaterialRequest/MaterialRequestList';
+import MaterialRequest1 from '../Screens/MainComponents/MaterialRequest/MaterialRequest1';
+import MaterialRequest2 from '../Screens/MainComponents/MaterialRequest/MaterialRequest2';
+import MaterialRequest3 from '../Screens/MainComponents/MaterialRequest/MaterialRequest3';
 
 const Stack = createStackNavigator();
 
@@ -131,6 +135,10 @@ const AppNavigator = () => {
             component={OrderHtmlInvoiceSales}
           />
           <Stack.Screen name="ProductInvoice" component={ProductInvoice} />
+          <Stack.Screen name="MaterialRequestList" component={MaterialRequestList} />
+          <Stack.Screen name="MaterialRequest1" component={MaterialRequest1} />
+          <Stack.Screen name="MaterialRequest2" component={MaterialRequest2} />
+          <Stack.Screen name="MaterialRequest3" component={MaterialRequest3} />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>
