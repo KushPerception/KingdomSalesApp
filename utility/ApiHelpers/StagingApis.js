@@ -1900,6 +1900,19 @@ export const submitMaterialRequest = async (userToken, payload) => {
   throw new Error('submit MR failed: ' + response.status + ' ' + errText);
 };
 
+export const getMaterialRequestDetail = async (userToken, mrNo) => {
+  const url = `${StagApiUrl}/material-request/${mrNo}/detail`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('detail failed: ' + response.status);
+};
+
 export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {
   const url = `${StagApiUrl}/material-request/stocks?stock_code=${encodeURIComponent(stockCode)}&stock_name=${encodeURIComponent(stockName)}&per_page=50&page=${page}`;
   console.log('getMaterialRequestStocks URL:', url);

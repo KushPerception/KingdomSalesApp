@@ -69,6 +69,11 @@ const MaterialRequestList = props => {
     );
   };
 
+  const handleLogout = async () => {
+    await AsyncStorage.clear();
+    props.navigation.replace('Login');
+  };
+
   const fetchData = async () => {
     const token = await AsyncStorage.getItem('access_token');
     if (token) {
@@ -90,8 +95,18 @@ const MaterialRequestList = props => {
   };
 
   const RenderItem = ({item}) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>{item?.MRNO ?? '-'}</Text>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      activeOpacity={item?.is_editable ? 0.6 : 1}
+      onPress={() => {
+        if (item?.is_editable) {
+          props.navigation.navigate('MaterialRequest1', {mrno: item.MRNO});
+        }
+      }}>
+      <View style={styles.itemTitleRow}>
+        <Text style={styles.itemTitle}>{item?.MRNO ?? '-'}</Text>
+        {item?.is_editable && <Text style={styles.editBadge}>Edit</Text>}
+      </View>
       <Text style={styles.itemText}>Date: {item?.MRDATE ?? '-'}</Text>
       <Text style={styles.itemText}>Division: {item?.DIVISION ?? '-'}</Text>
       <Text style={styles.itemText}>Dept: {item?.DEPT ?? '-'}</Text>
@@ -99,7 +114,7 @@ const MaterialRequestList = props => {
       <Text style={styles.itemText}>Eq/Part: {item?.EQPART ?? '-'}</Text>
       <Text style={styles.itemText}>Veh No: {item?.VEHNO ?? '-'}</Text>
       <Text style={styles.itemText}>Priority: {item?.PRIORITY ?? '-'}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   const RenderFooter = () =>
@@ -112,8 +127,9 @@ const MaterialRequestList = props => {
   return (
     <View style={styles.container}>
       <HeaderComponent
-        OnlyTitle={true}
+        HomeScreenHeader={true}
         Title="Material Requests"
+        onPressRight2={handleLogout}
       />
       <TouchableOpacity
         style={styles.fab}
@@ -315,7 +331,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  itemTitle: {fontSize: 15, fontWeight: 'bold', paddingBottom: 4},
+  itemTitleRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4},
+  itemTitle: {fontSize: 15, fontWeight: 'bold'},
+  editBadge: {fontSize: 11, color: primaryColor, borderWidth: 1, borderColor: primaryColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1},
   itemText: {fontSize: 13, paddingTop: 2, color: '#444'},
   footer: {padding: 10, alignItems: 'center'},
   emptyContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},

@@ -92,7 +92,11 @@ const MPinOtp = props => {
         props.navigation.navigate('DriverOrders');
       } else if (UserRoleType === 'REQUESTER') {
         props.navigation.navigate('MaterialRequestList');
-      } else {
+      }
+      else if (UserRoleType === 'PURCHASEMANAGER') {
+        props.navigation.navigate('PurchaseManager');
+      }    
+       else {
         props.navigation.navigate('Home');
       }
     } else {
