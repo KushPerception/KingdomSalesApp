@@ -75,7 +75,10 @@ const MaterialRequest2 = props => {
       })),
     };
     console.log('MaterialRequest2 NEXT payload:', JSON.stringify(payload, null, 2));
-    // TODO: navigate to submit screen or call API
+    props.navigation.navigate('MaterialRequestAttachment', {
+      mrNo,
+      payload,
+    });
   };
 
   return (

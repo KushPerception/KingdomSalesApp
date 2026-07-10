@@ -1884,6 +1884,22 @@ export const getMaterialRequestList = async (
   }
 };
 
+export const submitMaterialRequest = async (userToken, payload) => {
+  const url = `${StagApiUrl}/material-request/save`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (response.status === 200 || response.status === 201) return response.json();
+  const errText = await response.text();
+  throw new Error('submit MR failed: ' + response.status + ' ' + errText);
+};
+
 export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {
   const url = `${StagApiUrl}/material-request/stocks?stock_code=${encodeURIComponent(stockCode)}&stock_name=${encodeURIComponent(stockName)}&per_page=50&page=${page}`;
   console.log('getMaterialRequestStocks URL:', url);

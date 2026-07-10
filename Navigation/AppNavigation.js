@@ -36,6 +36,7 @@ import MaterialRequestList from '../Screens/MainComponents/MaterialRequest/Mater
 import MaterialRequest1 from '../Screens/MainComponents/MaterialRequest/MaterialRequest1';
 import MaterialRequest2 from '../Screens/MainComponents/MaterialRequest/MaterialRequest2';
 import MaterialRequest3 from '../Screens/MainComponents/MaterialRequest/MaterialRequest3';
+import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest/MaterialRequestAttachment';
 
 const Stack = createStackNavigator();
 
@@ -139,6 +140,7 @@ const AppNavigator = () => {
           <Stack.Screen name="MaterialRequest1" component={MaterialRequest1} />
           <Stack.Screen name="MaterialRequest2" component={MaterialRequest2} />
           <Stack.Screen name="MaterialRequest3" component={MaterialRequest3} />
+          <Stack.Screen name="MaterialRequestAttachment" component={MaterialRequestAttachment} />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>
