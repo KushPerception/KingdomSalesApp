@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
   ScrollView,
@@ -19,105 +19,93 @@ import {
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import RNBlobUtil from 'react-native-blob-util';
 import { BlackColor, primaryColor } from '../../../utility/colors';
+import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
 import HeaderComponent from '../../CommonComponents/Header';
 import {
   mainUrl,
   submitMaterialRequest,
+  updateMaterialRequest,
+  getMaterialRequestAttachments,
 } from '../../../utility/ApiHelpers/StagingApis';
 
 const ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx', 'xls'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_ATTACH_NAME_LENGTH = 50; // backend ATTACHNAME column is 50 chars (including extension)
+
+const sanitizeFileName = originalName => {
+  if (!originalName) return `file_${Date.now()}`;
+  if (originalName.length <= MAX_ATTACH_NAME_LENGTH) return originalName;
+  const dotIndex = originalName.lastIndexOf('.');
+  const ext = dotIndex !== -1 ? originalName.slice(dotIndex) : '';
+  const base = dotIndex !== -1 ? originalName.slice(0, dotIndex) : originalName;
+  const maxBaseLength = Math.max(MAX_ATTACH_NAME_LENGTH - ext.length, 1);
+  return base.slice(0, maxBaseLength) + ext;
+};
 
 const MaterialRequestAttachment = props => {
-  const { mrNo, payload } = props.route?.params ?? {};
+  const { mrNo, payload, isEdit } = props.route?.params ?? {};
   // each file: { name, uri, type, size, uploaded: bool, uploading: bool, error: string|null }
   const [files, setFiles] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingExisting, setFetchingExisting] = useState(false);
   const [mrSubmitted, setMrSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && mrNo) {
+      fetchExistingAttachments();
+    }
+  }, []);
+
+  const fetchExistingAttachments = async () => {
+    setFetchingExisting(true);
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+      const res = await getMaterialRequestAttachments(token, mrNo);
+      if (res?.success) setExistingAttachments(res.data ?? []);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to load existing attachments.');
+    } finally {
+      setFetchingExisting(false);
+    }
+  };
+
+  const getMimeType = file => {
+    if (file.type && file.type !== 'application/octet-stream') return file.type;
+    const ext = file.name?.split('.').pop()?.toLowerCase();
+    const map = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+    };
+    return map[ext] ?? 'application/octet-stream';
+  };
 
   const uploadAttachment = async (file, token) => {
     const url = `${mainUrl}api/material-request/${mrNo}/attachments`;
-    console.log('[uploadAttachment] start', JSON.stringify({
+    const mimeType = getMimeType(file);
+    const fileUri = file.uri.startsWith('file://') ? file.uri : `file://${file.uri}`;
+
+    console.log('[uploadAttachment] START', { url, fileName: file.name, fileUri, mimeType, fileSize: file.size });
+
+    const res = await RNBlobUtil.fetch(
+      'POST',
       url,
-      mrNo,
-      hasToken: !!token,
-      tokenPreview: token ? `${token.slice(0, 10)}...${token.slice(-6)}` : null,
-      fileName: file.name,
-      fileUri: file.uri,
-      fileType: file.type,
-      fileSizeBytes: file.size,
-    },null,2));
+      { Authorization: 'Bearer ' + token },
+      [{ name: 'attachment', filename: file.name, type: mimeType, data: RNBlobUtil.wrap(fileUri.replace('file://', '')) }],
+    );
 
-    let base64Data;
-    try {
-      base64Data = await RNBlobUtil.fs.readFile(file.uri, 'base64');
-    } catch (readErr) {
-          console.log('[uploadAttachment] readFile FAILED', JSON.stringify({
-            fileName: file.name,
-            fileUri: file.uri,
-            error: readErr?.message ?? String(readErr),
-          },null,2));
-      throw readErr;
+    const status = res.respInfo.status;
+    const body = res.data;
+    console.log('[uploadAttachment] RESPONSE', { fileName: file.name, status, body });
+
+    if (status !== 200 && status !== 201) {
+      throw new Error(`Upload failed for ${file.name}: ${status} ${body}`);
     }
-    console.log('[uploadAttachment] read file as base64', JSON.stringify({
-      fileName: file.name,
-      base64Length: base64Data?.length,
-      base64Preview: base64Data?.slice(0, 30),
-    },null,2));
-
-    const formData = new FormData();
-    formData.append('file', base64Data);
-    formData.append('filename', file.name);
-
-    const startedAt = Date.now();
-    let res;
-    try {
-      res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + token,
-        },
-        body: formData,
-      });
-    } catch (fetchErr) {
-      console.log('[uploadAttachment] fetch THREW (network-level failure)', JSON.stringify({
-        fileName: file.name,
-        durationMs: Date.now() - startedAt,
-        error: fetchErr?.message ?? String(fetchErr),
-      },null,2));
-      throw fetchErr;
-    }
-
-    const durationMs = Date.now() - startedAt;
-    const responseHeaders = {};
-    res.headers?.forEach?.((value, key) => {
-      responseHeaders[key] = value;
-    });
-    console.log('[uploadAttachment] response received', JSON.stringify({
-      fileName: file.name,
-      status: res.status,
-      durationMs,
-      responseHeaders,
-    },null,2));
-
-    if (res.status !== 200 && res.status !== 201) {
-      const errText = await res.text();
-      console.log('[uploadAttachment] FAILED response body', JSON.stringify({
-        fileName: file.name,
-        status: res.status,
-        body: errText,
-      },null,2));
-      throw new Error(
-        `Upload failed for ${file.name}: ${res.status} ${errText}`,
-      );
-    }
-
-    const okText = await res.text();
-    console.log('[uploadAttachment] SUCCESS response body', JSON.stringify({
-      fileName: file.name,
-      status: res.status,
-      body: okText,
-    },null,2));
     return true;
   };
 
@@ -133,7 +121,13 @@ const MaterialRequestAttachment = props => {
     }
     setFiles(prev => [
       ...prev,
-      { ...file, uploaded: false, uploading: false, error: null },
+      {
+        ...file,
+        name: sanitizeFileName(file.name),
+        uploaded: false,
+        uploading: false,
+        error: null,
+      },
     ]);
   };
 
@@ -196,50 +190,29 @@ const MaterialRequestAttachment = props => {
   const removeFile = idx => setFiles(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async () => {
-    if (files.length === 0) {
+    if (!isEdit && files.length === 0) {
+      Alert.alert('Validation', 'Please add at least one attachment.');
+      return;
+    }
+    if (isEdit && files.length === 0 && existingAttachments.length === 0) {
       Alert.alert('Validation', 'Please add at least one attachment.');
       return;
     }
     setLoading(true);
-    console.log('[handleSubmit] start', JSON.stringify({
-      mrNo,
-      mrSubmitted,
-      totalFiles: files.length,
-      files: files.map(f => ({
-        name: f.name,
-        size: f.size,
-        uploaded: f.uploaded,
-      })),
-    }, null, 2));
     try {
       const token = await AsyncStorage.getItem('access_token');
-      console.log('[handleSubmit] token loaded', { hasToken: !!token });
 
-      // Step 1: Submit the material request (only once, even on retry)
       if (!mrSubmitted) {
-        console.log(
-          '[handleSubmit] submitting MR payload:',
-          JSON.stringify(payload, null, 2),
-        );
-        const mrResponse = await submitMaterialRequest(token, payload);
-        console.log(
-          '[handleSubmit] submitMaterialRequest response:',
-          JSON.stringify(mrResponse,null,2),
-        );
+        if (isEdit) {
+          await updateMaterialRequest(token, mrNo, payload);
+        } else {
+          await submitMaterialRequest(token, payload);
+        }
         setMrSubmitted(true);
-      } else {
-        console.log(
-          '[handleSubmit] MR already submitted, skipping submitMaterialRequest',
-        );
       }
 
-      // Step 2: Upload each attachment individually, tracking failures per file
       const pendingFiles = files.filter(f => !f.uploaded);
       const failedFileNames = [];
-      console.log(
-        '[handleSubmit] pending attachment uploads:',
-        pendingFiles.map(f => f.name),
-      );
 
       for (const file of pendingFiles) {
         setFiles(prev =>
@@ -258,7 +231,6 @@ const MaterialRequestAttachment = props => {
           );
         } catch (e) {
           const errorMessage = e?.message ?? 'Upload failed';
-          console.error(`Attachment upload failed for ${file.name}:`, e);
           setFiles(prev =>
             prev.map(f =>
               f.uri === file.uri
@@ -275,21 +247,16 @@ const MaterialRequestAttachment = props => {
         }
       }
 
-      console.log('[handleSubmit] done', JSON.stringify({
-        totalPending: pendingFiles.length,
-        succeeded: pendingFiles.length - failedFileNames.length,
-        failed: failedFileNames,
-      }, null, 2));
 
       if (failedFileNames.length > 0) {
         Alert.alert(
           'Some Attachments Failed',
-          `Material request submitted, but the following attachment(s) failed to upload:\n\n${failedFileNames.join(
+          `${isEdit ? 'Attachments' : 'Material request submitted'}, but the following attachment(s) failed to upload:\n\n${failedFileNames.join(
             '\n',
           )}\n\nTap SUBMIT again to retry the failed uploads.`,
         );
       } else {
-        Alert.alert('Success', 'Material request submitted successfully.', [
+        Alert.alert('Success', isEdit ? 'Material request updated successfully.' : 'Material request submitted successfully.', [
           {
             text: 'OK',
             onPress: () => props.navigation.navigate('MaterialRequestList'),
@@ -297,11 +264,6 @@ const MaterialRequestAttachment = props => {
         ]);
       }
     } catch (e) {
-      console.log('[handleSubmit] outer catch - unexpected error', JSON.stringify({
-        error: e?.message ?? String(e),
-        stack: e?.stack,
-      }, null, 2));
-      console.error('handleSubmit error:', e);
       Alert.alert(
         'Error',
         e.message ?? 'Something went wrong. Please try again.',
@@ -329,9 +291,36 @@ const MaterialRequestAttachment = props => {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {files.length === 0 ? (
+        {fetchingExisting && <ActivityIndicator color={primaryColor} style={{ marginVertical: 16 }} />}
+
+        {existingAttachments.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>Existing Attachments</Text>
+            {existingAttachments.map((att, idx) => (
+              <View key={`existing-${idx}`} style={[styles.fileCard, { borderLeftColor: '#27ae60' }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fileName} numberOfLines={1}>{att.ATTACHNAME}</Text>
+                  <Text style={styles.fileSize}>
+                    {att.ATTACHDATE?.split(' ')[0]} · {(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB
+                  </Text>
+                  {att.ATTACHFILE ? (
+                    <View style={{ marginTop: 8 }}>
+                      <AttachmentImageViewer attachment={att} />
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+        {(existingAttachments.length > 0 || isEdit) && (
+          <Text style={styles.sectionLabel}>New Attachments</Text>
+        )}
+
+        {files.length === 0 && !isEdit ? (
           <Text style={styles.emptyText}>No attachments added</Text>
-        ) : (
+        ) : files.length === 0 && isEdit ? null : (
           files.map((file, idx) => (
             <View key={idx} style={styles.fileCard}>
               <View style={{ flex: 1 }}>
@@ -353,6 +342,9 @@ const MaterialRequestAttachment = props => {
                     ? 'Upload failed ✗'
                     : `${(file.size / 1024).toFixed(1)} KB`}
                 </Text>
+                <View style={{ marginTop: 8 }}>
+                  <AttachmentImageViewer attachment={file} />
+                </View>
               </View>
               <TouchableOpacity
                 onPress={() => removeFile(idx)}
@@ -442,6 +434,7 @@ const styles = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#888', marginBottom: 8, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
 });
 
 export default MaterialRequestAttachment;

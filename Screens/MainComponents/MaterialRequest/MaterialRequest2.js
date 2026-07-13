@@ -1,4 +1,5 @@
-import React, {useRef, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   ScrollView,
@@ -8,16 +9,43 @@ import {
   View,
 } from 'react-native';
 import {TextInput} from 'react-native-gesture-handler';
+import {getMaterialRequestDetail} from '../../../utility/ApiHelpers/StagingApis';
 import {BlackColor, primaryColor} from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
+import LoaderComponent from '../../CommonComponents/LoaderComponent';
 
 const MaterialRequest2 = props => {
-  const {mrNo, mrDate, division, dept, plant, eqp, vehNo, vehDesc, priority, jobRefNo} =
+  const {mrNo, mrDate, division, dept, plant, eqp, vehNo, vehDesc, priority, jobRefNo, isEditMode} =
     props.route?.params ?? {};
 
-  // items array: [{ stockcode, stockname, unit, qty, remarks }]
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(!!isEditMode);
   const onStockSelectedRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditMode) loadExistingItems();
+  }, []);
+
+  const loadExistingItems = async () => {
+    try {
+      const t = await AsyncStorage.getItem('access_token');
+      const res = await getMaterialRequestDetail(t, mrNo);
+      const raw = res?.data?.items ?? res?.data?.ITEMS ?? res?.items ?? res?.ITEMS ?? [];
+      const mapped = raw.map(i => ({
+        stockcode: i?.STOCKCODE ?? i?.stockcode ?? '',
+        stockname: i?.STOCKNAME ?? i?.stockname ?? '',
+        unit:      i?.UNIT ?? i?.unit ?? 'NOS',
+        qty:       String(i?.QTY ?? i?.qty ?? ''),
+        remarks:   i?.REMARKS ?? i?.remarks ?? '',
+        slno:      i?.SLNO ?? i?.slno ?? null,
+      }));
+      setItems(mapped);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to load existing items.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onStockSelected = stock => {
     console.log('onStockSelected:', JSON.stringify(stock));
@@ -78,6 +106,7 @@ const MaterialRequest2 = props => {
     props.navigation.navigate('MaterialRequestAttachment', {
       mrNo,
       payload,
+      isEdit: !!isEditMode,
     });
   };
 
@@ -85,10 +114,11 @@ const MaterialRequest2 = props => {
     <View style={styles.container}>
       <HeaderComponent
         BackTitle={true}
-        Title="New Material Request"
+        Title={isEditMode ? 'Edit Material Request' : 'New Material Request'}
         onBackPress={() => props.navigation.goBack()}
       />
 
+      {loading ? <LoaderComponent /> : (
       <ScrollView contentContainerStyle={styles.content}>
 
         {items.length === 0 ? (
@@ -139,6 +169,7 @@ const MaterialRequest2 = props => {
         )}
 
       </ScrollView>
+      )}
 
       {/* FAB */}
       <TouchableOpacity

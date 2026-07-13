@@ -1913,6 +1913,35 @@ export const getMaterialRequestDetail = async (userToken, mrNo) => {
   throw new Error('detail failed: ' + response.status);
 };
 
+export const getMaterialRequestAttachments = async (userToken, mrNo) => {
+  const url = `${StagApiUrl}/material-request/${mrNo}/attachments`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200) return response.json();
+  throw new Error('attachments failed: ' + response.status);
+};
+
+export const updateMaterialRequest = async (userToken, mrNo, payload) => {
+  const url = `${StagApiUrl}/material-request/${mrNo}/update`;
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (response.status === 200 || response.status === 201) return response.json();
+  const errText = await response.text();
+  throw new Error('update MR failed: ' + response.status + ' ' + errText);
+};
+
 export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {
   const url = `${StagApiUrl}/material-request/stocks?stock_code=${encodeURIComponent(stockCode)}&stock_name=${encodeURIComponent(stockName)}&per_page=50&page=${page}`;
   console.log('getMaterialRequestStocks URL:', url);
