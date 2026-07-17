@@ -1,5 +1,11 @@
 import React from 'react';
-import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   BlackColor,
   darkGreyTextColor,
@@ -7,17 +13,24 @@ import {
   primaryColor,
   whiteColor,
 } from '../../../utility/colors';
-import {fonts} from '../../../utility/GlobalStyles';
+import { fonts } from '../../../utility/GlobalStyles';
 
-const QuotationTab = ({item, index, expandedIndex, onToggle, onPressMenu}) => {
+const QuotationTab = ({
+  item,
+  index,
+  expandedIndex,
+  onToggle,
+  onPressMenu,
+}) => {
   const isExpanded = expandedIndex === index;
-  console.log('[QuotationTab] mr_no =', item.mr_no, '| enquiries count =', item.enquiries?.length ?? 0, '| expanded =', isExpanded);
+
   return (
     <View style={styles.card}>
       <TouchableOpacity
         style={styles.cardHeader}
         onPress={() => onToggle(index)}
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+      >
         <View style={styles.cardInfo}>
           <Text style={styles.mrNo}>{item.mr_no}</Text>
           <Text style={styles.stockCode}>{item.stock_code}</Text>
@@ -40,7 +53,8 @@ const QuotationTab = ({item, index, expandedIndex, onToggle, onPressMenu}) => {
               {item.enquiries?.map((eq, i) => (
                 <View
                   key={i}
-                  style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}>
+                  style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}
+                >
                   <Text style={styles.hCol}>{eq.eq_no}</Text>
                   <Text style={styles.hCol}>{eq.supplier}</Text>
                   <Text style={styles.hCol}>{eq.qty ?? '-'}</Text>
@@ -51,17 +65,21 @@ const QuotationTab = ({item, index, expandedIndex, onToggle, onPressMenu}) => {
                         styles.statusText,
                         eq.approved && styles.approved,
                         eq.rejected && styles.rejected,
-                      ]}>
-                      {eq.approved ? 'Approved' : eq.rejected ? 'Rejected' : 'Pending'}
+                      ]}
+                    >
+                      {eq.approved
+                        ? 'Approved'
+                        : eq.rejected
+                        ? 'Rejected'
+                        : 'Pending'}
                     </Text>
                     {!eq.approved && !eq.rejected && (
                       <TouchableOpacity
                         onPress={() => {
-                          console.log('[QuotationTab] ⋮ pressed: eq_no =', eq.eq_no);
-                          console.log('[QuotationTab] ⋮ pressed: full eq row =', JSON.stringify(eq, null, 2));
                           onPressMenu(eq);
                         }}
-                        hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
                         <Text style={styles.threeDot}>⋮</Text>
                       </TouchableOpacity>
                     )}
@@ -90,7 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
   },
-  cardInfo: {flex: 1},
+  cardInfo: { flex: 1 },
   mrNo: {
     fontSize: 15,
     fontFamily: fonts.Lato_Bold,
@@ -108,8 +126,8 @@ const styles = StyleSheet.create({
     color: lightGreyTextColor,
     marginTop: 2,
   },
-  arrow: {fontSize: 14, color: primaryColor, marginLeft: 8},
-  enquiriesContainer: {borderTopWidth: 1, borderTopColor: '#eee'},
+  arrow: { fontSize: 14, color: primaryColor, marginLeft: 8 },
+  enquiriesContainer: { borderTopWidth: 1, borderTopColor: '#eee' },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: primaryColor,
@@ -121,15 +139,39 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
   },
-  tableRowAlt: {backgroundColor: '#f9f9f9'},
-  col: {flex: 1, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular},
-  hCol: {width: 110, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular, paddingRight: 6},
-  colHeader: {color: whiteColor, fontFamily: fonts.Lato_Bold, fontSize: 12},
-  statusCell: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  statusText: {fontSize: 12, fontFamily: fonts.Lato_Regular, color: BlackColor},
-  threeDot: {fontSize: 16, color: primaryColor, fontWeight: '700', lineHeight: 18},
-  approved: {color: '#006B38'},
-  rejected: {color: '#cc0000'},
+  tableRowAlt: { backgroundColor: '#f9f9f9' },
+  col: {
+    flex: 1,
+    fontSize: 12,
+    color: BlackColor,
+    fontFamily: fonts.Lato_Regular,
+  },
+  hCol: {
+    width: 110,
+    fontSize: 12,
+    color: BlackColor,
+    fontFamily: fonts.Lato_Regular,
+    paddingRight: 6,
+  },
+  colHeader: { color: whiteColor, fontFamily: fonts.Lato_Bold, fontSize: 12 },
+  statusCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusText: {
+    fontSize: 12,
+    fontFamily: fonts.Lato_Regular,
+    color: BlackColor,
+  },
+  threeDot: {
+    fontSize: 16,
+    color: primaryColor,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  approved: { color: '#006B38' },
+  rejected: { color: '#cc0000' },
 });
 
 export default QuotationTab;

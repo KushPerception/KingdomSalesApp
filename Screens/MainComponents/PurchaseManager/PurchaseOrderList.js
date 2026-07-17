@@ -1,0 +1,273 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import usePaginatedList from '../../../hooks/usePaginatedList';
+import {
+  approvePurchaseOrder,
+  fetchPurchaseOrderList,
+  rejectPurchaseOrder,
+} from '../../../utility/ApiHelpers/PurchaseOrderApi';
+import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
+import { lightGreyTextColor, primaryColor } from '../../../utility/colors';
+import { fonts } from '../../../utility/GlobalStyles';
+import ApproveModal from '../../CommonComponents/ApproveModal';
+import BottomSheetModal from '../../CommonComponents/BottomSheetModal';
+import FilterBar from '../../CommonComponents/FilterBar';
+import PurchaseOrderTab from './PurchaseOrderTab';
+
+const SEARCH_BY_OPTIONS = ['PONO', 'Department', 'Supplier'];
+const STATUS_OPTIONS = ['All', 'Approved', 'Rejected'];
+const DEFAULT_FILTERS = {
+  pono: '',
+  department: '',
+  supname: '',
+  from_date: '',
+  to_date: '',
+  approved_only: '',
+  rejected_only: '',
+};
+
+const PurchaseOrderList = ({ navigation }) => {
+  const tokenRef = useRef(null);
+
+  const [searchBy, setSearchBy] = useState('PONO');
+  const [keyword, setKeyword] = useState('');
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  const [poBottomSheet, setPOBottomSheet] = useState({
+    visible: false,
+    po: null,
+  });
+  const [poActionModal, setPOActionModal] = useState({
+    visible: false,
+    po: null,
+    mode: 'approve',
+  });
+  const [poActionRemarks, setPOActionRemarks] = useState('');
+  const [poActioning, setPOActioning] = useState(false);
+
+  const { list, loading, footerLoading, search, loadMore } = usePaginatedList({
+    fetchPage: (filters, page) =>
+      fetchPurchaseOrderList(tokenRef.current, filters, page),
+  });
+
+  useEffect(() => {
+    (async () => {
+      tokenRef.current = await AsyncStorage.getItem('access_token');
+      search(DEFAULT_FILTERS);
+    })();
+  }, []);
+
+  const handleSearch = () => {
+    search({
+      pono: searchBy === 'PONO' ? keyword : '',
+      department: searchBy === 'Department' ? keyword : '',
+      supname: searchBy === 'Supplier' ? keyword : '',
+      from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
+      to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
+      approved_only: statusFilter === 'Approved' ? 1 : '',
+      rejected_only: statusFilter === 'Rejected' ? 1 : '',
+    });
+  };
+
+  const handleClear = () => {
+    setKeyword('');
+    setFromDate(null);
+    setToDate(null);
+    setStatusFilter('All');
+    search(DEFAULT_FILTERS);
+  };
+
+  const openPOSheet = po => setPOBottomSheet({ visible: true, po });
+  const closePOSheet = () => setPOBottomSheet({ visible: false, po: null });
+
+  const handlePOAction = async () => {
+    const poNo = poActionModal.po?.PONO;
+    const mode = poActionModal.mode;
+    setPOActioning(true);
+    try {
+      const action =
+        mode === 'reject' ? rejectPurchaseOrder : approvePurchaseOrder;
+      await action(tokenRef.current, poNo, poActionRemarks);
+      setPOActionModal({ visible: false, po: null, mode: 'approve' });
+      search(DEFAULT_FILTERS);
+    } catch (e) {
+      console.error('[PurchaseOrderList] handlePOAction error:', e.message);
+    } finally {
+      setPOActioning(false);
+    }
+  };
+
+  const poSheetButtons = [
+    {
+      label: 'Enquiry Details',
+      onPress: () => {
+        const poNo = poBottomSheet.po?.PONO;
+        closePOSheet();
+        navigation.navigate('PMCommonScreen', {
+          title: 'Enquiry Details',
+          apiUrl: `${mainUrl}api/purchase-order/${poNo}/eq-details`,
+          isEqDetails: true,
+        });
+      },
+    },
+    {
+      label: 'MR Details',
+      onPress: () => {
+        const poNo = poBottomSheet.po?.PONO;
+        closePOSheet();
+        navigation.navigate('PMCommonScreen', {
+          title: 'MR Details',
+          apiUrl: `${mainUrl}api/purchase-order/${poNo}/mr-details`,
+          isMrDetails: true,
+        });
+      },
+    },
+    {
+      label: 'MR Attach',
+      onPress: () => {
+        const mrNo = poBottomSheet.po?.mr_attachment?.mr_no;
+        closePOSheet();
+        navigation.navigate('PMCommonScreen', {
+          title: 'MR Attachments',
+          apiUrl: `${mainUrl}api/material-request/${mrNo}/attachments`,
+          isDetail: false,
+        });
+      },
+    },
+    {
+      label: 'Purchase Order Details',
+      onPress: () => {
+        const poNo = poBottomSheet.po?.PONO;
+        closePOSheet();
+        navigation.navigate('PMCommonScreen', {
+          title: 'Purchase Order Details',
+          apiUrl: `${mainUrl}api/purchase-order/${poNo}/detail`,
+          isDetail: true,
+        });
+      },
+    },
+    {
+      label: 'Purchase Order Attach',
+      onPress: () => {
+        const poNo = poBottomSheet.po?.PONO;
+        closePOSheet();
+        navigation.navigate('PMCommonScreen', {
+          title: 'Purchase Order Attachments',
+          apiUrl: `${mainUrl}api/purchase-order/${poNo}/attachments`,
+          isDetail: false,
+        });
+      },
+    },
+    {
+      label: 'Reject',
+      onPress: () => {
+        const po = poBottomSheet.po;
+        closePOSheet();
+        setPOActionRemarks('');
+        setPOActionModal({ visible: true, po, mode: 'reject' });
+      },
+      danger: true,
+    },
+    {
+      label: 'Approve',
+      onPress: () => {
+        const po = poBottomSheet.po;
+        closePOSheet();
+        setPOActionRemarks('');
+        setPOActionModal({ visible: true, po, mode: 'approve' });
+      },
+      accent: true,
+    },
+  ];
+
+  return (
+    <View style={styles.container}>
+      <ApproveModal
+        visible={poActionModal.visible}
+        eqNo={poActionModal.po?.PONO}
+        remarks={poActionRemarks}
+        onChangeRemarks={setPOActionRemarks}
+        onCancel={() =>
+          setPOActionModal({ visible: false, po: null, mode: 'approve' })
+        }
+        onConfirm={handlePOAction}
+        loading={poActioning}
+        mode={poActionModal.mode}
+      />
+      <BottomSheetModal
+        visible={poBottomSheet.visible}
+        onClose={closePOSheet}
+        buttons={poSheetButtons}
+      />
+      <FilterBar
+        searchByOptions={SEARCH_BY_OPTIONS}
+        searchBy={searchBy}
+        onChangeSearchBy={setSearchBy}
+        keyword={keyword}
+        onChangeKeyword={setKeyword}
+        fromDate={fromDate}
+        toDate={toDate}
+        onChangeFromDate={setFromDate}
+        onChangeToDate={setToDate}
+        statusOptions={STATUS_OPTIONS}
+        statusFilter={statusFilter}
+        onChangeStatus={setStatusFilter}
+        onSearch={handleSearch}
+        onClear={handleClear}
+      />
+      {loading ? (
+        <ActivityIndicator
+          style={styles.loader}
+          size="large"
+          color={primaryColor}
+        />
+      ) : (
+        <FlatList
+          data={list}
+          keyExtractor={(_, i) => i.toString()}
+          renderItem={({ item }) => (
+            <PurchaseOrderTab item={item} onPressMenu={openPOSheet} />
+          )}
+          contentContainerStyle={styles.listContent}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            footerLoading ? (
+              <ActivityIndicator
+                style={styles.footerLoader}
+                size="small"
+                color={primaryColor}
+              />
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No data found.</Text>
+            </View>
+          }
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  loader: { flex: 1, justifyContent: 'center' },
+  listContent: { padding: 12 },
+  footerLoader: { paddingVertical: 16 },
+  empty: { flex: 1, alignItems: 'center', marginTop: 40 },
+  emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
+});
+
+export default PurchaseOrderList;
