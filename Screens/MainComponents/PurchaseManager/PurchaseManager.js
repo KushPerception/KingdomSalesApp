@@ -194,6 +194,10 @@ const PurchaseManager = props => {
   );
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [noMorePages, setNoMorePages] = useState(false);
+  const [footerLoading, setFooterLoading] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [bottomSheet, setBottomSheet] = useState({ visible: false, eq: null });
   const [poBottomSheet, setPOBottomSheet] = useState({
@@ -226,7 +230,6 @@ const PurchaseManager = props => {
   const [eqToDate, setEQToDate] = useState(null);
 
   const openApproveModal = eq => {
-    console.log('[PurchaseManager] openApproveModal: eq_no =', eq?.eq_no);
     setApprovalRemarks('');
     setApproveModal({ visible: true, eq });
   };
@@ -235,12 +238,8 @@ const PurchaseManager = props => {
   const handleApprove = async () => {
     const eqNo = approveModal.eq?.eq_no;
     const url = `${mainUrl}api/enquiry/${eqNo}/approve`;
-    console.log('[PurchaseManager] handleApprove: eqNo =', eqNo);
-    console.log('[PurchaseManager] handleApprove: url =', url);
-    console.log(
-      '[PurchaseManager] handleApprove: approval_remarks =',
-      approvalRemarks,
-    );
+    const body = { approval_remarks: approvalRemarks };
+    console.log('[PurchaseManager] POST', url, '| request:', body);
     setApproving(true);
     try {
       const token = await AsyncStorage.getItem('access_token');
@@ -250,25 +249,30 @@ const PurchaseManager = props => {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + token,
         },
-        body: JSON.stringify({ approval_remarks: approvalRemarks }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
-      console.log('[PurchaseManager] handleApprove: status =', res.status);
       console.log(
-        '[PurchaseManager] handleApprove: response =',
-        JSON.stringify(json, null, 2),
+        '[PurchaseManager] POST',
+        url,
+        '| status:',
+        res.status,
+        '| response:',
+        json,
       );
       if (res.status === 200 || res.status === 201) {
         closeApproveModal();
         fetchData();
       } else {
         console.error(
-          '[PurchaseManager] handleApprove: failed =',
+          '[PurchaseManager] POST',
+          url,
+          '| failed:',
           json?.message,
         );
       }
     } catch (e) {
-      console.error('[PurchaseManager] handleApprove: error =', e.message);
+      console.error('[PurchaseManager] POST', url, '| error:', e.message);
     } finally {
       setApproving(false);
     }
@@ -278,14 +282,8 @@ const PurchaseManager = props => {
     const poNo = poActionModal.po?.PONO;
     const mode = poActionModal.mode;
     const url = `${mainUrl}api/purchase-order/${poNo}/${mode}`;
-    console.log(
-      '[PurchaseManager] handlePOAction: poNo =',
-      poNo,
-      '| mode =',
-      mode,
-      '| url =',
-      url,
-    );
+    const body = { remarks: poActionRemarks };
+    console.log('[PurchaseManager] POST', url, '| request:', body);
     setPOActioning(true);
     try {
       const token = await AsyncStorage.getItem('access_token');
@@ -295,57 +293,39 @@ const PurchaseManager = props => {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + token,
         },
-        body: JSON.stringify({ remarks: poActionRemarks }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       console.log(
-        '[PurchaseManager] handlePOAction: status =',
+        '[PurchaseManager] POST',
+        url,
+        '| status:',
         res.status,
-        '| response =',
-        JSON.stringify(json, null, 2),
+        '| response:',
+        json,
       );
       if (res.status === 200 || res.status === 201) {
         setPOActionModal({ visible: false, po: null, mode: 'approve' });
         fetchData();
       } else {
         console.error(
-          '[PurchaseManager] handlePOAction: failed =',
+          '[PurchaseManager] POST',
+          url,
+          '| failed:',
           json?.message,
         );
       }
     } catch (e) {
-      console.error('[PurchaseManager] handlePOAction: error =', e.message);
+      console.error('[PurchaseManager] POST', url, '| error:', e.message);
     } finally {
       setPOActioning(false);
     }
   };
 
   const openSheet = eq => {
-    console.log(
-      '[PurchaseManager] openSheet: full eq =',
-      JSON.stringify(eq, null, 2),
-    );
-    console.log('[PurchaseManager] openSheet: eq_no =', eq?.eq_no);
-    console.log(
-      '[PurchaseManager] openSheet: mr_details.mr_no =',
-      eq?.mr_details?.mr_no,
-    );
-    console.log(
-      '[PurchaseManager] openSheet: mr_attachment.mr_no =',
-      eq?.mr_attachment?.mr_no,
-    );
-    console.log(
-      '[PurchaseManager] openSheet: eq_details.eq_no =',
-      eq?.eq_details?.eq_no,
-    );
-    console.log(
-      '[PurchaseManager] openSheet: eq_attachment.eq_no =',
-      eq?.eq_attachment?.eq_no,
-    );
     setBottomSheet({ visible: true, eq });
   };
   const closeSheet = () => {
-    console.log('[PurchaseManager] closeSheet');
     setBottomSheet({ visible: false, eq: null });
   };
 
@@ -353,40 +333,59 @@ const PurchaseManager = props => {
     fetchData(activeTab);
   }, [activeTab]);
 
-  const loadList = async endpoint => {
-    console.log('[PurchaseManager] loadList: endpoint =', endpoint);
-    setLoading(true);
-    setList([]);
+  const loadList = async (endpoint, pageNo = 1, reset = true) => {
+    const url = `${endpoint}&page=${pageNo}`;
+    console.log('[PurchaseManager] GET', url);
+    setCurrentUrl(endpoint);
+    if (reset) {
+      setLoading(true);
+      setList([]);
+      setNoMorePages(false);
+    } else {
+      setFooterLoading(true);
+    }
     const token = await AsyncStorage.getItem('access_token');
     const myHeaders = new Headers();
     myHeaders.append('Authorization', `Bearer ${token}`);
-    fetch(endpoint, {
+    fetch(url, {
       method: 'GET',
       headers: myHeaders,
       redirect: 'follow',
     })
       .then(res => {
-        console.log(
-          '[PurchaseManager] loadList: response status =',
-          res.status,
-        );
+        console.log('[PurchaseManager] GET', url, '| status:', res.status);
         return res.json();
       })
       .then(data => {
         const items = data.data?.data ?? [];
-        console.log('[PurchaseManager] loadList: items count =', items.length);
-        setList(items);
+        const lastPage = data.data?.last_page ?? 1;
+        console.log(
+          '[PurchaseManager] GET',
+          url,
+          '| items:',
+          items.length,
+          '| page:',
+          pageNo,
+          '/',
+          lastPage,
+        );
+        setList(prev => (reset ? items : [...prev, ...items]));
+        setPage(pageNo);
+        setNoMorePages(pageNo >= lastPage);
       })
-      .catch(err => console.error('[PurchaseManager] loadList: error =', err))
+      .catch(err =>
+        console.error('[PurchaseManager] GET', url, '| error:', err),
+      )
       .finally(() => {
         setLoading(false);
+        setFooterLoading(false);
       });
   };
 
   const fetchData = (tab = activeTab) => {
     const endpoint =
       tab === 'quotation'
-        ? `${mainUrl}api/enquiry/quotation-list?mrno=&stock_code=&from_date=&to_date=`
+        ? `${mainUrl}api/enquiry/quotation-list?mrno=&stock_code=&from_date=&to_date=&per_page=20`
         : `${mainUrl}api/purchase-order/list?pono=&department=&supname=&from_date=&to_date=&approved_only=&rejected_only=&per_page=20`;
     loadList(endpoint);
   };
@@ -418,7 +417,7 @@ const PurchaseManager = props => {
     const from_date = eqFromDate ? moment(eqFromDate).format('YYYY-MM-DD') : '';
     const to_date = eqToDate ? moment(eqToDate).format('YYYY-MM-DD') : '';
     loadList(
-      `${mainUrl}api/enquiry/quotation-list?mrno=${mrno}&stock_code=${stock_code}&from_date=${from_date}&to_date=${to_date}`,
+      `${mainUrl}api/enquiry/quotation-list?mrno=${mrno}&stock_code=${stock_code}&from_date=${from_date}&to_date=${to_date}&per_page=20`,
     );
   };
 
@@ -427,6 +426,12 @@ const PurchaseManager = props => {
     setEQFromDate(null);
     setEQToDate(null);
     fetchData('quotation');
+  };
+
+  const handleLoadMore = () => {
+    if (!loading && !footerLoading && !noMorePages && currentUrl) {
+      loadList(currentUrl, page + 1, false);
+    }
   };
 
   const handleLogout = () => {
@@ -443,27 +448,13 @@ const PurchaseManager = props => {
   };
 
   const toggleExpand = index => {
-    setExpandedIndex(prev => {
-      const next = prev === index ? null : index;
-      console.log(
-        `[PurchaseManager] toggleExpand: index ${index} -> ${
-          next === null ? 'collapsed' : 'expanded'
-        }`,
-      );
-      return next;
-    });
+    setExpandedIndex(prev => (prev === index ? null : index));
   };
 
   const openPOSheet = po => {
-    console.log('[PurchaseManager] openPOSheet: PONO =', po?.PONO);
-    console.log(
-      '[PurchaseManager] openPOSheet: full po =',
-      JSON.stringify(po, null, 2),
-    );
     setPOBottomSheet({ visible: true, po });
   };
   const closePOSheet = () => {
-    console.log('[PurchaseManager] closePOSheet');
     setPOBottomSheet({ visible: false, po: null });
   };
 
@@ -473,12 +464,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const poNo = poBottomSheet.po?.PONO;
         const apiUrl = `${mainUrl}api/purchase-order/${poNo}/eq-details`;
-        console.log(
-          '[PurchaseManager] PO Enquiry Details: poNo =',
-          poNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closePOSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'Enquiry Details',
@@ -492,12 +477,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const poNo = poBottomSheet.po?.PONO;
         const apiUrl = `${mainUrl}api/purchase-order/${poNo}/mr-details`;
-        console.log(
-          '[PurchaseManager] PO MR Details: poNo =',
-          poNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closePOSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'MR Details',
@@ -511,12 +490,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const mrNo = poBottomSheet.po?.mr_attachment?.mr_no;
         const apiUrl = `${mainUrl}api/material-request/${mrNo}/attachments`;
-        console.log(
-          '[PurchaseManager] PO MR Attach: mrNo =',
-          mrNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closePOSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'MR Attachments',
@@ -530,12 +503,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const poNo = poBottomSheet.po?.PONO;
         const apiUrl = `${mainUrl}api/purchase-order/${poNo}/detail`;
-        console.log(
-          '[PurchaseManager] PO Details: poNo =',
-          poNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closePOSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'Purchase Order Details',
@@ -549,12 +516,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const poNo = poBottomSheet.po?.PONO;
         const apiUrl = `${mainUrl}api/purchase-order/${poNo}/attachments`;
-        console.log(
-          '[PurchaseManager] PO Attach: poNo =',
-          poNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closePOSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'Purchase Order Attachments',
@@ -567,7 +528,6 @@ const PurchaseManager = props => {
       label: 'Reject',
       onPress: () => {
         const po = poBottomSheet.po;
-        console.log('[PurchaseManager] PO Reject pressed: PONO =', po?.PONO);
         closePOSheet();
         setPOActionRemarks('');
         setPOActionModal({ visible: true, po, mode: 'reject' });
@@ -578,7 +538,6 @@ const PurchaseManager = props => {
       label: 'Approve',
       onPress: () => {
         const po = poBottomSheet.po;
-        console.log('[PurchaseManager] PO Approve pressed: PONO =', po?.PONO);
         closePOSheet();
         setPOActionRemarks('');
         setPOActionModal({ visible: true, po, mode: 'approve' });
@@ -593,12 +552,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const eqNo = bottomSheet.eq?.eq_details?.eq_no;
         const apiUrl = `${mainUrl}api/enquiry/${eqNo}/detail`;
-        console.log(
-          '[PurchaseManager] Enquiry Details: eqNo =',
-          eqNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closeSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'Enquiry Details',
@@ -612,12 +565,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const eqNo = bottomSheet.eq?.eq_attachment?.eq_no;
         const apiUrl = `${mainUrl}api/enquiry/${eqNo}/attachments`;
-        console.log(
-          '[PurchaseManager] Enquiry Attach: eqNo =',
-          eqNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closeSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'Enquiry Attachments',
@@ -631,12 +578,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const mrNo = bottomSheet.eq?.mr_details?.mr_no;
         const apiUrl = `${mainUrl}api/material-request/${mrNo}/detail`;
-        console.log(
-          '[PurchaseManager] MR Details: mrNo =',
-          mrNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closeSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'MR Details',
@@ -650,12 +591,6 @@ const PurchaseManager = props => {
       onPress: () => {
         const mrNo = bottomSheet.eq?.mr_attachment?.mr_no;
         const apiUrl = `${mainUrl}api/material-request/${mrNo}/attachments`;
-        console.log(
-          '[PurchaseManager] MR Attach: mrNo =',
-          mrNo,
-          '| apiUrl =',
-          apiUrl,
-        );
         closeSheet();
         props.navigation.navigate('PMCommonScreen', {
           title: 'MR Attachments',
@@ -668,7 +603,6 @@ const PurchaseManager = props => {
       label: 'Approve',
       onPress: () => {
         const eq = bottomSheet.eq;
-        console.log('[PurchaseManager] Approve pressed: eq_no =', eq?.eq_no);
         closeSheet();
         openApproveModal(eq);
       },
@@ -793,6 +727,17 @@ const PurchaseManager = props => {
                 )
           }
           contentContainerStyle={styles.listContent}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            footerLoading ? (
+              <ActivityIndicator
+                style={styles.footerLoader}
+                size="small"
+                color={primaryColor}
+              />
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyText}>No data found.</Text>

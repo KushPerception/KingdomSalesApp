@@ -32,6 +32,10 @@ const STATUS_OPTIONS = ['All', 'Approved', 'Rejected'];
 const PurchaseOrderScreen = props => {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [noMorePages, setNoMorePages] = useState(false);
+  const [footerLoading, setFooterLoading] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
   const [poBottomSheet, setPOBottomSheet] = useState({
     visible: false,
     po: null,
@@ -58,6 +62,8 @@ const PurchaseOrderScreen = props => {
     const poNo = poActionModal.po?.PONO;
     const mode = poActionModal.mode;
     const url = `${mainUrl}api/purchase-order/${poNo}/${mode}`;
+    const body = { remarks: poActionRemarks };
+    console.log('[PurchaseOrderScreen] POST', url, '| request:', body);
     setPOActioning(true);
     try {
       const token = await AsyncStorage.getItem('access_token');
@@ -67,20 +73,30 @@ const PurchaseOrderScreen = props => {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + token,
         },
-        body: JSON.stringify({ remarks: poActionRemarks }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
+      console.log(
+        '[PurchaseOrderScreen] POST',
+        url,
+        '| status:',
+        res.status,
+        '| response:',
+        json,
+      );
       if (res.status === 200 || res.status === 201) {
         setPOActionModal({ visible: false, po: null, mode: 'approve' });
         fetchData();
       } else {
         console.error(
-          '[PurchaseOrderScreen] handlePOAction: failed =',
+          '[PurchaseOrderScreen] POST',
+          url,
+          '| failed:',
           json?.message,
         );
       }
     } catch (e) {
-      console.error('[PurchaseOrderScreen] handlePOAction: error =', e.message);
+      console.error('[PurchaseOrderScreen] POST', url, '| error:', e.message);
     } finally {
       setPOActioning(false);
     }
@@ -90,15 +106,55 @@ const PurchaseOrderScreen = props => {
     fetchData();
   }, []);
 
-  const loadList = async url => {
-    setLoading(true);
-    setList([]);
+  const loadList = async (url, pageNo = 1, reset = true) => {
+    const fullUrl = `${url}&page=${pageNo}`;
+    console.log('[PurchaseOrderScreen] GET', fullUrl);
+    setCurrentUrl(url);
+    if (reset) {
+      setLoading(true);
+      setList([]);
+      setNoMorePages(false);
+    } else {
+      setFooterLoading(true);
+    }
     const token = await AsyncStorage.getItem('access_token');
-    fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(data => setList(data.data?.data ?? []))
-      .catch(err => console.error('[PurchaseOrderScreen] error =', err))
-      .finally(() => setLoading(false));
+    fetch(fullUrl, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        console.log(
+          '[PurchaseOrderScreen] GET',
+          fullUrl,
+          '| status:',
+          res.status,
+        );
+        return res.json();
+      })
+      .then(data => {
+        const items = data.data?.data ?? [];
+        const lastPage = data.data?.last_page ?? 1;
+        console.log(
+          '[PurchaseOrderScreen] GET',
+          fullUrl,
+          '| items:',
+          items.length,
+          '| page:',
+          pageNo,
+          '/',
+          lastPage,
+        );
+        setList(prev => (reset ? items : [...prev, ...items]));
+        setPage(pageNo);
+        setNoMorePages(pageNo >= lastPage);
+      })
+      .catch(err =>
+        console.error('[PurchaseOrderScreen] GET', fullUrl, '| error:', err),
+      )
+      .finally(() => {
+        setLoading(false);
+        setFooterLoading(false);
+      });
   };
 
   const fetchData = () => {
@@ -126,6 +182,12 @@ const PurchaseOrderScreen = props => {
     setToDate(null);
     setStatusFilter('All');
     fetchData();
+  };
+
+  const handleLoadMore = () => {
+    if (!loading && !footerLoading && !noMorePages && currentUrl) {
+      loadList(currentUrl, page + 1, false);
+    }
   };
 
   const openPOSheet = po => setPOBottomSheet({ visible: true, po });
@@ -392,6 +454,17 @@ const PurchaseOrderScreen = props => {
             <PurchaseOrderTab item={item} onPressMenu={openPOSheet} />
           )}
           contentContainerStyle={styles.listContent}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            footerLoading ? (
+              <ActivityIndicator
+                style={styles.footerLoader}
+                size="small"
+                color={primaryColor}
+              />
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyText}>No data found.</Text>
@@ -407,6 +480,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   loader: { flex: 1, justifyContent: 'center' },
   listContent: { padding: 12 },
+  footerLoader: { paddingVertical: 16 },
   empty: { flex: 1, alignItems: 'center', marginTop: 40 },
   emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
 
