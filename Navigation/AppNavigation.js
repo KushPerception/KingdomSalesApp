@@ -38,6 +38,9 @@ import MaterialRequest2 from '../Screens/MainComponents/MaterialRequest/Material
 import MaterialRequest3 from '../Screens/MainComponents/MaterialRequest/MaterialRequest3';
 import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest/MaterialRequestAttachment';
 import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManager';
+import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/PMCommonScreen';
+import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/PurchaseOrderSceen';
+
 
 const Stack = createStackNavigator();
 
@@ -143,6 +146,8 @@ const AppNavigator = () => {
           <Stack.Screen name="MaterialRequest3" component={MaterialRequest3} />
           <Stack.Screen name="MaterialRequestAttachment" component={MaterialRequestAttachment} />
           <Stack.Screen name="PurchaseManager" component={PurchaseManager} />
+          <Stack.Screen name="PMCommonScreen" component={PMCommonScreen} />
+          <Stack.Screen name="PurchaseOrderScreen" component={PurchaseOrderScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>

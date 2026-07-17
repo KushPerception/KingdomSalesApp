@@ -5,6 +5,7 @@ import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -69,9 +70,11 @@ const MaterialRequestList = props => {
     );
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.clear();
-    props.navigation.replace('Login');
+  const handleLogout = () => {
+    Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
+      { text: 'NO', style: 'cancel' },
+      { text: 'YES', onPress: async () => { await AsyncStorage.clear(); props.navigation.replace('Login'); } },
+    ]);
   };
 
   const fetchData = async () => {

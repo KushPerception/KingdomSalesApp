@@ -95,8 +95,11 @@ const MPinOtp = props => {
       }
       else if (UserRoleType === 'PURCHASEMANAGER') {
         props.navigation.navigate('PurchaseManager');
-      }    
-       else {
+      }
+      else if (UserRoleType === 'CEO' || UserRoleType === 'MD') {
+        props.navigation.navigate('PurchaseOrderScreen',);
+      }
+      else {
         props.navigation.navigate('Home');
       }
     } else {
