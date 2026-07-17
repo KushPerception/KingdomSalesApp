@@ -129,8 +129,8 @@ const PurchaseManager = props => {
     const myHeaders = new Headers();
     myHeaders.append('Authorization', `Bearer ${token}`);
     const endpoint = tab === 'quotation'
-      ? 'https://kingdom.thatsmytask.com/api/enquiry/quotation-list'
-      : 'https://kingdom.thatsmytask.com/api/purchase-order/list?pono=&department=&supname=&from_date=&to_date=&approved_only=&rejected_only=&per_page=20';
+      ? `${mainUrl}api/enquiry/quotation-list`
+      : `${mainUrl}api/purchase-order/list?pono=&department=&supname=&from_date=&to_date=&approved_only=&rejected_only=&per_page=20`;
     console.log('[PurchaseManager] fetchData: endpoint =', endpoint);
     fetch(endpoint, {
       method: 'GET',

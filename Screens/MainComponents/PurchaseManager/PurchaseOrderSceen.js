@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, Alert, FlatList, StyleSheet, Text, View} from 'react-native';
 import {mainUrl} from '../../../utility/ApiHelpers/StagingApis';
 import {primaryColor, lightGreyTextColor, whiteColor} from '../../../utility/colors';
 import {fonts} from '../../../utility/GlobalStyles';
@@ -22,7 +22,7 @@ const PurchaseOrderScreen = props => {
     setList([]);
     const token = await AsyncStorage.getItem('access_token');
     fetch(
-      'https://kingdom.thatsmytask.com/api/purchase-order/list?pono=&department=&supname=&from_date=&to_date=&approved_only=&rejected_only=&per_page=20',
+      `${mainUrl}api/purchase-order/list?pono=&department=&supname=&from_date=&to_date=&approved_only=&rejected_only=&per_page=20`,
       {method: 'GET', headers: {Authorization: `Bearer ${token}`}},
     )
       .then(res => res.json())
@@ -119,10 +119,15 @@ const PurchaseOrderScreen = props => {
       <HeaderComponent
         HomeScreenHeader={true}
         Title="Purchase Orders"
-        onPressRight2={async () => {
-          await AsyncStorage.clear();
-          props.navigation.replace('Login');
-        }}
+        onPressRight2={() =>
+          Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
+            {text: 'NO', style: 'cancel'},
+            {text: 'YES', onPress: async () => {
+              await AsyncStorage.clear();
+              props.navigation.replace('Login');
+            }},
+          ])
+        }
       />
       {loading ? (
         <ActivityIndicator style={styles.loader} size="large" color={primaryColor} />

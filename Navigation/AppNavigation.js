@@ -40,6 +40,9 @@ import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest
 import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManager';
 import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/PMCommonScreen';
 import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/PurchaseOrderSceen';
+import CostController from '../Screens/MainComponents/CostController/CostController';
+import CreateLandingCost from '../Screens/MainComponents/CostController/CreateLandingCost';
+import SupplierPickerScreen from '../Screens/MainComponents/CostController/SupplierPickerScreen';
 
 
 const Stack = createStackNavigator();
@@ -148,6 +151,9 @@ const AppNavigator = () => {
           <Stack.Screen name="PurchaseManager" component={PurchaseManager} />
           <Stack.Screen name="PMCommonScreen" component={PMCommonScreen} />
           <Stack.Screen name="PurchaseOrderScreen" component={PurchaseOrderScreen} />
+          <Stack.Screen name="CostController" component={CostController} />
+          <Stack.Screen name="CreateLandingCost" component={CreateLandingCost} />
+          <Stack.Screen name="SupplierPickerScreen" component={SupplierPickerScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>

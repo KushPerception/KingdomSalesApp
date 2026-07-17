@@ -57,6 +57,7 @@ const MaterialRequest2 = props => {
         unit: stock?.UNIT ?? stock?.Unit ?? stock?.unit ?? 'NOS',
         qty: '',
         remarks: '',
+        isNewStock: true,
       },
     ]);
   };
@@ -82,6 +83,11 @@ const MaterialRequest2 = props => {
     const invalidIdx = items.findIndex(i => !i.qty || i.qty === '');
     if (invalidIdx !== -1) {
       Alert.alert('Validation', `Quantity is required for item ${invalidIdx + 1}.`);
+      return;
+    }
+    const remarkIdx = items.findIndex(i => i.isNewStock && (!i.remarks || i.remarks.trim() === ''));
+    if (remarkIdx !== -1) {
+      Alert.alert('Validation', `Remark is required for new stock item ${remarkIdx + 1}.`);
       return;
     }
     const payload = {
@@ -149,7 +155,7 @@ const MaterialRequest2 = props => {
               />
 
               {/* Remark */}
-              <Text style={styles.fieldLabel}>Remark</Text>
+              <Text style={styles.fieldLabel}>Remark{item.isNewStock ? ' *' : ''}</Text>
               <TextInput
                 style={[styles.input, styles.remarkInput]}
                 placeholder="Enter Remark"

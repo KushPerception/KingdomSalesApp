@@ -99,6 +99,9 @@ const MPinOtp = props => {
       else if (UserRoleType === 'CEO' || UserRoleType === 'MD') {
         props.navigation.navigate('PurchaseOrderScreen',);
       }
+      else if (UserRoleType === 'COSTCONTROLLER') {
+        props.navigation.navigate('CostController');
+      }
       else {
         props.navigation.navigate('Home');
       }

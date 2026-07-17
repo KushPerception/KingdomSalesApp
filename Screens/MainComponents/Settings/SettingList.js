@@ -80,8 +80,10 @@ const SettingList = props => {
   };
 
   const OnClickLogout = () => {
-    console.log('UserToken', UserToken);
-    logoutUser(UserToken, LogoutCallback);
+    Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
+      {text: 'NO', style: 'cancel'},
+      {text: 'YES', onPress: () => logoutUser(UserToken, LogoutCallback)},
+    ]);
   };
 
   const onClickSwitchDriverSalesMan = Role => {

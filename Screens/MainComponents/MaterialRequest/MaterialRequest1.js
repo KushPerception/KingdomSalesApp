@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   Alert,
+  BackHandler,
   FlatList,
   Modal,
   ScrollView,
@@ -12,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import {TextInput} from 'react-native-gesture-handler';
+import {useFocusEffect} from '@react-navigation/native';
 import {
   cancelMaterialRequestDraft,
   getMaterialRequestDepartments,
@@ -231,6 +233,17 @@ const MaterialRequest1 = props => {
       ],
     );
   };
+
+  // ── intercept hardware back ──
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBack();
+        return true;
+      });
+      return () => sub.remove();
+    }, [isEditMode, mrNo]),
+  );
 
   const handleNext = () => {
     if (!division || !dept || !plant || !eqp || !priority) {
