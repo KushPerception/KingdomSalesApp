@@ -82,7 +82,7 @@ const PODetailView = ({ data }) => {
     { label: 'Phone No', value: data.PHONENO },
     { label: 'REQ No', value: reqNos },
     { label: 'Dept/Pl/Equip', value: data.DEPARTMENT },
-  ].filter(row => row.value != null && row.value !== '');
+  ];
 
   const totals = items.reduce(
     (acc, it) => ({
@@ -133,7 +133,9 @@ const PODetailView = ({ data }) => {
                 <Text style={styles.infoLabelText}>{label}</Text>
               </View>
               <View style={styles.infoCellValue}>
-                <Text style={styles.infoValueText}>{String(value)}</Text>
+                <Text style={styles.infoValueText}>
+                  {value != null && value !== '' ? String(value) : '-'}
+                </Text>
               </View>
             </View>
           ))}
