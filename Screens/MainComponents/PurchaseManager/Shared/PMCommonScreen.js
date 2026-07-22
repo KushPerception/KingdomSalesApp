@@ -11,17 +11,17 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import HeaderComponent from '../../CommonComponents/Header';
-import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
-import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
+import HeaderComponent from '../../../CommonComponents/Header';
+import AttachmentImageViewer from '../../../CommonComponents/AttachmentImageViewer';
+import { mainUrl } from '../../../../utility/ApiHelpers/StagingApis';
 import {
   BlackColor,
   darkGreyTextColor,
   lightGreyTextColor,
   primaryColor,
   whiteColor,
-} from '../../../utility/colors';
-import { fonts } from '../../../utility/GlobalStyles';
+} from '../../../../utility/colors';
+import { fonts } from '../../../../utility/GlobalStyles';
 
 // ─── Reusable row for detail views ───────────────────────────────────────────
 const Row = ({ label, value }) =>

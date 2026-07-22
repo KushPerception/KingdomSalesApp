@@ -161,3 +161,40 @@ functions. So this pass *moved* them out rather than writing new ones:
   exercise: MR list load/search/date-range/load-more, new MR create flow
   (form → items → stock picker → attachments → submit), edit MR flow, and
   attachment upload/failure paths.
+
+## Status: Purchase Manager folder split by role ✅
+
+The `PurchaseManager/` folder had grown to 8 flat files serving two different
+roles (PURCHASEMANAGER and CEO/MD) plus the components they share, with
+nothing in the folder layout indicating which screen belonged to which role.
+Restructured into three subfolders, chosen and confirmed with the user over
+two other options (a `Shared/`-only split, and no split at all):
+
+```
+PurchaseManager/
+├── MRDetailScreen.js          # orphaned/dead, left in place (see note above)
+├── PurchaseManagerRole/       # PURCHASEMANAGER role only
+│   ├── PurchaseManager.js     # entry shell (tab bar: Quotation + Purchase Order)
+│   ├── QuotationList.js       # quotation tab — CEO/MD never sees this
+│   └── QuotationTab.js
+├── CeoMdRole/                 # CEO/MD role only
+│   └── PurchaseOrderScreen.js # entry shell (Purchase Order only, no tabs)
+└── Shared/                    # used by both roles
+    ├── PurchaseOrderList.js   # rendered by both PurchaseManager.js and PurchaseOrderScreen.js
+    ├── PurchaseOrderTab.js
+    └── PMCommonScreen.js      # detail/attachment viewer, navigated to from both PurchaseOrderList and QuotationList
+```
+
+- Pure file moves + relative-import-depth fixes — no logic, JSX, or route-name
+  changes. `Stack.Screen name=` values in `AppNavigation.js` are untouched;
+  only the 3 top-level import paths there were updated
+  (`PurchaseManagerRole/PurchaseManager`, `Shared/PMCommonScreen`,
+  `CeoMdRole/PurchaseOrderScreen`).
+- `PurchaseManager.js` and `PurchaseOrderScreen.js` both now import
+  `PurchaseOrderList` via `../Shared/PurchaseOrderList` (previously `./PurchaseOrderList`
+  since everything was flat).
+- Verified every relative import in all 7 moved files actually resolves to a
+  real file on disk (not just that the syntax parses), plus the same
+  `eslint` + `@babel/core` checks used in the earlier passes — all pre-move
+  lint findings reproduced identically on the moved files, confirming no
+  regressions.

@@ -5,11 +5,11 @@ import {
   primaryColor,
   whiteColor,
   lightGreyTextColor,
-} from '../../../utility/colors';
-import { fonts } from '../../../utility/GlobalStyles';
-import HeaderComponent from '../../CommonComponents/Header';
+} from '../../../../utility/colors';
+import { fonts } from '../../../../utility/GlobalStyles';
+import HeaderComponent from '../../../CommonComponents/Header';
 import QuotationList from './QuotationList';
-import PurchaseOrderList from './PurchaseOrderList';
+import PurchaseOrderList from '../Shared/PurchaseOrderList';
 
 const TABS = ['quotation', 'purchaseOrder'];
 

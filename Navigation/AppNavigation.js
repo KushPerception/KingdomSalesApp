@@ -37,9 +37,9 @@ import MaterialRequestForm from '../Screens/MainComponents/MaterialRequest/Mater
 import MaterialRequestItems from '../Screens/MainComponents/MaterialRequest/MaterialRequestItems';
 import MaterialRequestStockPicker from '../Screens/MainComponents/MaterialRequest/MaterialRequestStockPicker';
 import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest/MaterialRequestAttachment';
-import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManager';
-import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/PMCommonScreen';
-import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/PurchaseOrderScreen';
+import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManagerRole/PurchaseManager';
+import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/Shared/PMCommonScreen';
+import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/CeoMdRole/PurchaseOrderScreen';
 import CostController from '../Screens/MainComponents/CostController/CostController';
 import CreateLandingCost from '../Screens/MainComponents/CostController/CreateLandingCost';
 import SupplierPickerScreen from '../Screens/MainComponents/CostController/SupplierPickerScreen';

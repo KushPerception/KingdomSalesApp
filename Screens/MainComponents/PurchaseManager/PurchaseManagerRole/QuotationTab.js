@@ -12,8 +12,8 @@ import {
   lightGreyTextColor,
   primaryColor,
   whiteColor,
-} from '../../../utility/colors';
-import { fonts } from '../../../utility/GlobalStyles';
+} from '../../../../utility/colors';
+import { fonts } from '../../../../utility/GlobalStyles';
 
 const QuotationTab = ({
   item,
@@ -63,7 +63,13 @@ const QuotationTab = ({
                   <Text style={styles.hCol}>{eq.amount ?? '-'}</Text>
                   <View style={[styles.hCol, styles.statusCell]}>
                     {(() => {
-                      const s = eq.status ?? (eq.approved ? 'approved' : eq.rejected ? 'rejected' : 'pending');
+                      const s =
+                        eq.status ??
+                        (eq.approved
+                          ? 'approved'
+                          : eq.rejected
+                          ? 'rejected'
+                          : 'pending');
                       return (
                         <Text
                           style={[

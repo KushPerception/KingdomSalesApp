@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import HeaderComponent from '../../CommonComponents/Header';
-import PurchaseOrderList from './PurchaseOrderList';
+import HeaderComponent from '../../../CommonComponents/Header';
+import PurchaseOrderList from '../Shared/PurchaseOrderList';
 
 const PurchaseOrderScreen = props => {
   const handleLogout = () => {

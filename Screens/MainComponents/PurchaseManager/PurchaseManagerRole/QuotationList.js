@@ -8,17 +8,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import usePaginatedList from '../../../hooks/usePaginatedList';
+import usePaginatedList from '../../../../hooks/usePaginatedList';
 import {
   approveEnquiry,
   fetchQuotationList,
-} from '../../../utility/ApiHelpers/EnquiryApi';
-import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
-import { lightGreyTextColor, primaryColor } from '../../../utility/colors';
-import { fonts } from '../../../utility/GlobalStyles';
-import ApproveModal from '../../CommonComponents/ApproveModal';
-import BottomSheetModal from '../../CommonComponents/BottomSheetModal';
-import FilterBar from '../../CommonComponents/FilterBar';
+} from '../../../../utility/ApiHelpers/EnquiryApi';
+import { mainUrl } from '../../../../utility/ApiHelpers/StagingApis';
+import { lightGreyTextColor, primaryColor } from '../../../../utility/colors';
+import { fonts } from '../../../../utility/GlobalStyles';
+import ApproveModal from '../../../CommonComponents/ApproveModal';
+import BottomSheetModal from '../../../CommonComponents/BottomSheetModal';
+import FilterBar from '../../../CommonComponents/FilterBar';
 import QuotationTab from './QuotationTab';
 
 const SEARCH_BY_OPTIONS = ['MRNO', 'Stock Code'];
@@ -66,7 +66,7 @@ const QuotationList = ({ navigation }) => {
     setExpandedIndex(prev => (prev === index ? null : index));
   };
 
-  const buildFilters = (overrideStatus) => ({
+  const buildFilters = overrideStatus => ({
     mrno: searchBy === 'MRNO' ? keyword : '',
     stock_code: searchBy === 'Stock Code' ? keyword : '',
     from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
@@ -165,12 +165,21 @@ const QuotationList = ({ navigation }) => {
     {
       label: 'Approve',
       onPress: () => {
-        const eq = { ...bottomSheet.eq, eq_no: bottomSheet.eq?.eq_details?.eq_no ?? bottomSheet.eq?.eq_no };
+        const eq = {
+          ...bottomSheet.eq,
+          eq_no: bottomSheet.eq?.eq_details?.eq_no ?? bottomSheet.eq?.eq_no,
+        };
         closeSheet();
         openApproveModal(eq);
       },
       accent: true,
-      hidden: (() => { const eq = bottomSheet.eq; const s = eq?.status ?? (eq?.approved ? 'approved' : eq?.rejected ? 'rejected' : 'pending'); return s !== 'pending'; })(),
+      hidden: (() => {
+        const eq = bottomSheet.eq;
+        const s =
+          eq?.status ??
+          (eq?.approved ? 'approved' : eq?.rejected ? 'rejected' : 'pending');
+        return s !== 'pending';
+      })(),
     },
   ];
 

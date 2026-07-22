@@ -8,18 +8,18 @@ import {
   Text,
   View,
 } from 'react-native';
-import usePaginatedList from '../../../hooks/usePaginatedList';
+import usePaginatedList from '../../../../hooks/usePaginatedList';
 import {
   approvePurchaseOrder,
   fetchPurchaseOrderList,
   rejectPurchaseOrder,
-} from '../../../utility/ApiHelpers/PurchaseOrderApi';
-import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
-import { lightGreyTextColor, primaryColor } from '../../../utility/colors';
-import { fonts } from '../../../utility/GlobalStyles';
-import ApproveModal from '../../CommonComponents/ApproveModal';
-import BottomSheetModal from '../../CommonComponents/BottomSheetModal';
-import FilterBar from '../../CommonComponents/FilterBar';
+} from '../../../../utility/ApiHelpers/PurchaseOrderApi';
+import { mainUrl } from '../../../../utility/ApiHelpers/StagingApis';
+import { lightGreyTextColor, primaryColor } from '../../../../utility/colors';
+import { fonts } from '../../../../utility/GlobalStyles';
+import ApproveModal from '../../../CommonComponents/ApproveModal';
+import BottomSheetModal from '../../../CommonComponents/BottomSheetModal';
+import FilterBar from '../../../CommonComponents/FilterBar';
 import PurchaseOrderTab from './PurchaseOrderTab';
 
 const SEARCH_BY_OPTIONS = ['PONO', 'Department', 'Supplier'];
@@ -116,80 +116,89 @@ const PurchaseOrderList = ({ navigation }) => {
   const isActioned = !!(po?.approved || po?.rejected);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const poSheetButtons = React.useMemo(() => [
-    {
-      label: 'Enquiry Details',
-      onPress: () => {
-        const poNo = poBottomSheet.po?.PONO;
-        closePOSheet();
-        navigation.navigate('PMCommonScreen', {
-          title: 'Enquiry Details',
-          apiUrl: `${mainUrl}api/purchase-order/${poNo}/eq-details`,
-          isEqDetails: true,
-        });
+  const poSheetButtons = React.useMemo(
+    () => [
+      {
+        label: 'Enquiry Details',
+        onPress: () => {
+          const poNo = poBottomSheet.po?.PONO;
+          closePOSheet();
+          navigation.navigate('PMCommonScreen', {
+            title: 'Enquiry Details',
+            apiUrl: `${mainUrl}api/purchase-order/${poNo}/eq-details`,
+            isEqDetails: true,
+          });
+        },
       },
-    },
-    {
-      label: 'MR Details',
-      onPress: () => {
-        const poNo = poBottomSheet.po?.PONO;
-        closePOSheet();
-        navigation.navigate('PMCommonScreen', {
-          title: 'MR Details',
-          apiUrl: `${mainUrl}api/purchase-order/${poNo}/mr-details`,
-          isMrDetails: true,
-        });
+      {
+        label: 'MR Details',
+        onPress: () => {
+          const poNo = poBottomSheet.po?.PONO;
+          closePOSheet();
+          navigation.navigate('PMCommonScreen', {
+            title: 'MR Details',
+            apiUrl: `${mainUrl}api/purchase-order/${poNo}/mr-details`,
+            isMrDetails: true,
+          });
+        },
       },
-    },
-    {
-      label: 'MR Attach',
-      onPress: () => {
-        const mrNo = poBottomSheet.po?.mr_attachment?.mr_no;
-        closePOSheet();
-        navigation.navigate('PMCommonScreen', {
-          title: 'MR Attachments',
-          apiUrl: `${mainUrl}api/material-request/${mrNo}/attachments`,
-          isDetail: false,
-        });
+      {
+        label: 'MR Attach',
+        onPress: () => {
+          const mrNo = poBottomSheet.po?.mr_attachment?.mr_no;
+          closePOSheet();
+          navigation.navigate('PMCommonScreen', {
+            title: 'MR Attachments',
+            apiUrl: `${mainUrl}api/material-request/${mrNo}/attachments`,
+            isDetail: false,
+          });
+        },
       },
-    },
-    {
-      label: 'Purchase Order Details',
-      onPress: () => {
-        const poNo = poBottomSheet.po?.PONO;
-        closePOSheet();
-        navigation.navigate('PMCommonScreen', {
-          title: 'Purchase Order Details',
-          apiUrl: `${mainUrl}api/purchase-order/${poNo}/detail`,
-          isPODetail: true,
-        });
+      {
+        label: 'Purchase Order Details',
+        onPress: () => {
+          const poNo = poBottomSheet.po?.PONO;
+          closePOSheet();
+          navigation.navigate('PMCommonScreen', {
+            title: 'Purchase Order Details',
+            apiUrl: `${mainUrl}api/purchase-order/${poNo}/detail`,
+            isPODetail: true,
+          });
+        },
       },
-    },
-    {
-      label: 'Purchase Order Attach',
-      onPress: () => {
-        const poNo = poBottomSheet.po?.PONO;
-        closePOSheet();
-        navigation.navigate('PMCommonScreen', {
-          title: 'Purchase Order Attachments',
-          apiUrl: `${mainUrl}api/purchase-order/${poNo}/attachments`,
-          isDetail: false,
-        });
+      {
+        label: 'Purchase Order Attach',
+        onPress: () => {
+          const poNo = poBottomSheet.po?.PONO;
+          closePOSheet();
+          navigation.navigate('PMCommonScreen', {
+            title: 'Purchase Order Attachments',
+            apiUrl: `${mainUrl}api/purchase-order/${poNo}/attachments`,
+            isDetail: false,
+          });
+        },
       },
-    },
-    ...(['Reject', 'Approve'].map((label, i) => ({
-      label,
-      onPress: isActioned ? null : () => {
-        closePOSheet();
-        setPOActionRemarks('');
-        setPOActionModal({ visible: true, po, mode: i === 0 ? 'reject' : 'approve' });
-      },
-      danger: i === 0,
-      accent: i === 1,
-      disabled: isActioned,
-    }))),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [poBottomSheet.po]);
+      ...['Reject', 'Approve'].map((label, i) => ({
+        label,
+        onPress: isActioned
+          ? null
+          : () => {
+              closePOSheet();
+              setPOActionRemarks('');
+              setPOActionModal({
+                visible: true,
+                po,
+                mode: i === 0 ? 'reject' : 'approve',
+              });
+            },
+        danger: i === 0,
+        accent: i === 1,
+        disabled: isActioned,
+      })),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [poBottomSheet.po],
+  );
 
   return (
     <View style={styles.container}>
