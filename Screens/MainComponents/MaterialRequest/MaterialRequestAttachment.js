@@ -88,20 +88,39 @@ const MaterialRequestAttachment = props => {
   const uploadAttachment = async (file, token) => {
     const url = `${mainUrl}api/material-request/${mrNo}/attachments`;
     const mimeType = getMimeType(file);
-    const fileUri = file.uri.startsWith('file://') ? file.uri : `file://${file.uri}`;
+    const fileUri = file.uri.startsWith('file://')
+      ? file.uri
+      : `file://${file.uri}`;
 
-    console.log('[uploadAttachment] START', { url, fileName: file.name, fileUri, mimeType, fileSize: file.size });
+    console.log('[uploadAttachment] START', {
+      url,
+      fileName: file.name,
+      fileUri,
+      mimeType,
+      fileSize: file.size,
+    });
 
     const res = await RNBlobUtil.fetch(
       'POST',
       url,
       { Authorization: 'Bearer ' + token },
-      [{ name: 'attachment', filename: file.name, type: mimeType, data: RNBlobUtil.wrap(fileUri.replace('file://', '')) }],
+      [
+        {
+          name: 'attachment',
+          filename: file.name,
+          type: mimeType,
+          data: RNBlobUtil.wrap(fileUri.replace('file://', '')),
+        },
+      ],
     );
 
     const status = res.respInfo.status;
     const body = res.data;
-    console.log('[uploadAttachment] RESPONSE', { fileName: file.name, status, body });
+    console.log('[uploadAttachment] RESPONSE', {
+      fileName: file.name,
+      status,
+      body,
+    });
 
     if (status !== 200 && status !== 201) {
       throw new Error(`Upload failed for ${file.name}: ${status} ${body}`);
@@ -239,27 +258,41 @@ const MaterialRequestAttachment = props => {
         }
       }
 
-
       if (failedFileNames.length > 0) {
         Alert.alert(
           'Some Attachments Failed',
-          `${isEdit ? 'Attachments' : 'Material request submitted'}, but the following attachment(s) failed to upload:\n\n${failedFileNames.join(
+          `${
+            isEdit ? 'Attachments' : 'Material request submitted'
+          }, but the following attachment(s) failed to upload:\n\n${failedFileNames.join(
             '\n',
           )}\n\nTap SUBMIT again to retry the failed uploads.`,
         );
       } else {
-        Alert.alert('Success', isEdit ? 'Material request updated successfully.' : 'Material request submitted successfully.', [
-          {
-            text: 'OK',
-            onPress: () => props.navigation.navigate('MaterialRequestList'),
-          },
-        ]);
+        Alert.alert(
+          'Success',
+          isEdit
+            ? 'Material request updated successfully.'
+            : 'Material request submitted successfully.',
+          [
+            {
+              text: 'OK',
+              onPress: () => props.navigation.navigate('MaterialRequestList'),
+            },
+          ],
+        );
       }
     } catch (e) {
-      Alert.alert(
-        'Error',
-        e.message ?? 'Something went wrong. Please try again.',
-      );
+      if (isEdit && /not\s*allow|editable|forward/i.test(e?.message ?? '')) {
+        Alert.alert(
+          'Editing Not Allowed',
+          'The MR request forwarded to the Purchase Department.',
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          e.message ?? 'Something went wrong. Please try again.',
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -283,17 +316,28 @@ const MaterialRequestAttachment = props => {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {fetchingExisting && <ActivityIndicator color={primaryColor} style={{ marginVertical: 16 }} />}
+        {fetchingExisting && (
+          <ActivityIndicator
+            color={primaryColor}
+            style={{ marginVertical: 16 }}
+          />
+        )}
 
         {existingAttachments.length > 0 && (
           <>
             <Text style={styles.sectionLabel}>Existing Attachments</Text>
             {existingAttachments.map((att, idx) => (
-              <View key={`existing-${idx}`} style={[styles.fileCard, { borderLeftColor: '#27ae60' }]}>
+              <View
+                key={`existing-${idx}`}
+                style={[styles.fileCard, { borderLeftColor: '#27ae60' }]}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.fileName} numberOfLines={1}>{att.ATTACHNAME}</Text>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {att.ATTACHNAME}
+                  </Text>
                   <Text style={styles.fileSize}>
-                    {att.ATTACHDATE?.split(' ')[0]} · {(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB
+                    {att.ATTACHDATE?.split(' ')[0]} ·{' '}
+                    {(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB
                   </Text>
                   {att.ATTACHFILE ? (
                     <View style={{ marginTop: 8 }}>
@@ -426,7 +470,15 @@ const styles = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
-  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#888', marginBottom: 8, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#888',
+    marginBottom: 8,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
 });
 
 export default MaterialRequestAttachment;

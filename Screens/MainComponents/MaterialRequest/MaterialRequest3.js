@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {TextInput} from 'react-native-gesture-handler';
-import {searchIcon} from '../../../Images';
-import {getMaterialRequestStocks} from '../../../utility/ApiHelpers/StagingApis';
-import {BlackColor, primaryColor} from '../../../utility/colors';
+import { TextInput } from 'react-native-gesture-handler';
+import { searchIcon } from '../../../Images';
+import { getMaterialRequestStocks } from '../../../utility/ApiHelpers/StagingApis';
+import { BlackColor, primaryColor } from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
 
 const MaterialRequest3 = props => {
@@ -22,8 +22,11 @@ const MaterialRequest3 = props => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    handleSearch();
-  }, []);
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [stockCode, stockName]);
 
   const handleSearch = async () => {
     try {
@@ -74,17 +77,30 @@ const MaterialRequest3 = props => {
       </View>
 
       {loading ? (
-        <ActivityIndicator style={{marginTop: 32}} size="large" color={primaryColor} />
+        <ActivityIndicator
+          style={{ marginTop: 32 }}
+          size="large"
+          color={primaryColor}
+        />
       ) : (
         <FlatList
           data={stocks}
-          keyExtractor={(item, idx) => String(item?.STOCKCODE ?? item?.StockCode ?? idx)}
+          keyExtractor={(item, idx) =>
+            String(item?.STOCKCODE ?? item?.StockCode ?? idx)
+          }
           contentContainerStyle={styles.list}
           ListEmptyComponent={<Text style={styles.empty}>No stocks found</Text>}
-          renderItem={({item}) => (
-            <TouchableOpacity style={styles.card} onPress={() => handleSelect(item)}>
-              <Text style={styles.cardCode}>{item?.STOCKCODE ?? item?.StockCode ?? '—'}</Text>
-              <Text style={styles.cardName}>{item?.STOCKNAME ?? item?.StockName ?? '—'}</Text>
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => handleSelect(item)}
+            >
+              <Text style={styles.cardCode}>
+                {item?.STOCKCODE ?? item?.StockCode ?? '—'}
+              </Text>
+              <Text style={styles.cardName}>
+                {item?.STOCKNAME ?? item?.StockName ?? '—'}
+              </Text>
             </TouchableOpacity>
           )}
         />
@@ -94,7 +110,7 @@ const MaterialRequest3 = props => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f5f5f5'},
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,8 +138,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchIcon: {width: 22, height: 22},
-  list: {padding: 12},
+  searchIcon: { width: 22, height: 22 },
+  list: { padding: 12 },
   card: {
     backgroundColor: 'white',
     borderRadius: 6,
@@ -131,9 +147,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     elevation: 1,
   },
-  cardCode: {fontSize: 13, fontWeight: '700', color: primaryColor},
-  cardName: {fontSize: 13, color: BlackColor, marginTop: 2},
-  empty: {textAlign: 'center', marginTop: 40, color: '#aaa', fontSize: 14},
+  cardCode: { fontSize: 13, fontWeight: '700', color: primaryColor },
+  cardName: { fontSize: 13, color: BlackColor, marginTop: 2 },
+  empty: { textAlign: 'center', marginTop: 40, color: '#aaa', fontSize: 14 },
 });
 
 export default MaterialRequest3;

@@ -1,23 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import moment from 'moment';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
-  Image,
   Alert,
   Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import {TextInput} from 'react-native-gesture-handler';
-import {searchIcon} from '../../../Images';
-import {getMaterialRequestList} from '../../../utility/ApiHelpers/StagingApis';
-import {BlackColor, modalBackgroundColor, primaryColor} from '../../../utility/colors';
+import { TextInput } from 'react-native-gesture-handler';
+import { getMaterialRequestList } from '../../../utility/ApiHelpers/StagingApis';
+import {
+  BlackColor,
+  modalBackgroundColor,
+  primaryColor,
+} from '../../../utility/colors';
 import ButtonWithLoader from '../../CommonComponents/ButtonLoader';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
@@ -34,7 +35,9 @@ const MaterialRequestList = props => {
   const [noMorePage, setNoMorePage] = useState(false);
   const [internetStatus, setInternetStatus] = useState(true);
 
-  const [fromDate, setFromDate] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)));
+  const [fromDate, setFromDate] = useState(
+    new Date(new Date().setMonth(new Date().getMonth() - 1)),
+  );
   const [toDate, setToDate] = useState(new Date());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
@@ -42,6 +45,7 @@ const MaterialRequestList = props => {
   const [searchBy, setSearchBy] = useState('MRNO');
   const [showDropdown, setShowDropdown] = useState(false);
   const [keyword, setKeyword] = useState('');
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     NetInfo.addEventListener(state => setInternetStatus(state.isConnected));
@@ -51,10 +55,21 @@ const MaterialRequestList = props => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      onSearch();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [keyword, searchBy]);
+
   const getFilterParams = () => ({
     division: searchBy === 'Division' ? keyword : '',
-    dept:     searchBy === 'Dept'     ? keyword : '',
-    mrno:     searchBy === 'MRNO'     ? keyword : '',
+    dept: searchBy === 'Dept' ? keyword : '',
+    mrno: searchBy === 'MRNO' ? keyword : '',
   });
 
   const callApi = (token, filters, fd, td, existingList, pg) => {
@@ -65,15 +80,26 @@ const MaterialRequestList = props => {
       filters.division,
       filters.dept,
       filters.mrno,
-      existingList, setList, pg, setPage,
-      setFooterLoading, setNoMorePage, setLoading,
+      existingList,
+      setList,
+      pg,
+      setPage,
+      setFooterLoading,
+      setNoMorePage,
+      setLoading,
     );
   };
 
   const handleLogout = () => {
     Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
       { text: 'NO', style: 'cancel' },
-      { text: 'YES', onPress: async () => { await AsyncStorage.clear(); props.navigation.replace('Login'); } },
+      {
+        text: 'YES',
+        onPress: async () => {
+          await AsyncStorage.clear();
+          props.navigation.replace('Login');
+        },
+      },
     ]);
   };
 
@@ -81,7 +107,14 @@ const MaterialRequestList = props => {
     const token = await AsyncStorage.getItem('access_token');
     if (token) {
       setUserToken(token);
-      callApi(token, {division: '', dept: '', mrno: ''}, fromDate, toDate, [], 1);
+      callApi(
+        token,
+        { division: '', dept: '', mrno: '' },
+        fromDate,
+        toDate,
+        [],
+        1,
+      );
     }
   };
 
@@ -97,19 +130,34 @@ const MaterialRequestList = props => {
     callApi(userToken, getFilterParams(), fromDate, toDate, list, page);
   };
 
-  const RenderItem = ({item}) => (
+  const RenderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
-      activeOpacity={item?.is_editable ? 0.6 : 1}
+      activeOpacity={0.6}
       onPress={() => {
         if (item?.is_editable) {
-          props.navigation.navigate('MaterialRequest1', {mrno: item.MRNO});
+          props.navigation.navigate('MaterialRequest1', { mrno: item.MRNO });
+        } else {
+          Alert.alert(
+            'Editing Not Allowed',
+            'The MR request forwarded to the Purchase Department.',
+          );
         }
-      }}>
+      }}
+    >
       <View style={styles.itemTitleRow}>
         <Text style={styles.itemTitle}>{item?.MRNO ?? '-'}</Text>
         <View style={styles.badgeRow}>
-          {<Text style={[styles.statusBadge, {backgroundColor: getStatusColor(item?.MRSTATUS)}]}>{item?.MRSTATUS ?? 'PENDING'}</Text>}
+          {
+            <Text
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(item?.MRSTATUS) },
+              ]}
+            >
+              {item?.MRSTATUS ?? 'PENDING'}
+            </Text>
+          }
           {item?.is_editable && <Text style={styles.editBadge}>Edit</Text>}
         </View>
       </View>
@@ -126,7 +174,11 @@ const MaterialRequestList = props => {
   const RenderFooter = () =>
     list?.length > 0 && !noMorePage ? (
       <View style={styles.footer}>
-        <ButtonWithLoader onPress={onLoadMore} title="Load More" loading={footerLoading} />
+        <ButtonWithLoader
+          onPress={onLoadMore}
+          title="Load More"
+          loading={footerLoading}
+        />
       </View>
     ) : null;
 
@@ -139,27 +191,44 @@ const MaterialRequestList = props => {
       />
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => props.navigation.navigate('MaterialRequest1')}>
+        onPress={() => props.navigation.navigate('MaterialRequest1')}
+      >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
-      <OfflineNotice isConnected={internetStatus} setIsConnected={setInternetStatus} />
+      <OfflineNotice
+        isConnected={internetStatus}
+        setIsConnected={setInternetStatus}
+      />
 
       {/* Date Row */}
       <View style={styles.dateRow}>
         <Text style={styles.dateLabel}>From</Text>
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowFromPicker(true)}>
-          <Text style={styles.dateText}>{moment(fromDate).format('DD/MM/YYYY')}</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowFromPicker(true)}
+        >
+          <Text style={styles.dateText}>
+            {moment(fromDate).format('DD/MM/YYYY')}
+          </Text>
         </TouchableOpacity>
         <Text style={styles.dateLabel}>To</Text>
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowToPicker(true)}>
-          <Text style={styles.dateText}>{moment(toDate).format('DD/MM/YYYY')}</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowToPicker(true)}
+        >
+          <Text style={styles.dateText}>
+            {moment(toDate).format('DD/MM/YYYY')}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Row */}
       <View style={styles.searchRow}>
         {/* Dropdown on the LEFT */}
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowDropdown(true)}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setShowDropdown(true)}
+        >
           <Text style={styles.dropdownButtonText}>{searchBy}</Text>
           <Text style={styles.dropdownArrow}>▾</Text>
         </TouchableOpacity>
@@ -170,15 +239,19 @@ const MaterialRequestList = props => {
           value={keyword}
           onChangeText={setKeyword}
         />
-        {/* Search button on the RIGHT */}
-        <TouchableOpacity onPress={onSearch} style={styles.searchButton}>
-          <Image source={searchIcon} style={styles.searchIcon} />
-        </TouchableOpacity>
       </View>
 
       {/* Dropdown Modal */}
-      <Modal transparent visible={showDropdown} animationType="fade" onRequestClose={() => setShowDropdown(false)}>
-        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowDropdown(false)}>
+      <Modal
+        transparent
+        visible={showDropdown}
+        animationType="fade"
+        onRequestClose={() => setShowDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          onPress={() => setShowDropdown(false)}
+        >
           <View style={styles.dropdownMenu}>
             {SEARCH_BY_OPTIONS.map(option => (
               <TouchableOpacity
@@ -190,8 +263,14 @@ const MaterialRequestList = props => {
                 onPress={() => {
                   setSearchBy(option);
                   setShowDropdown(false);
-                }}>
-                <Text style={[styles.dropdownItemText, searchBy === option && styles.dropdownItemTextActive]}>
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    searchBy === option && styles.dropdownItemTextActive,
+                  ]}
+                >
                   {option}
                 </Text>
               </TouchableOpacity>
@@ -207,7 +286,10 @@ const MaterialRequestList = props => {
         date={fromDate}
         mode="date"
         maximumDate={toDate}
-        onConfirm={date => { setFromDate(date); setShowFromPicker(false); }}
+        onConfirm={date => {
+          setFromDate(date);
+          setShowFromPicker(false);
+        }}
         onCancel={() => setShowFromPicker(false)}
       />
       <DatePicker
@@ -217,7 +299,10 @@ const MaterialRequestList = props => {
         mode="date"
         minimumDate={fromDate}
         maximumDate={new Date()}
-        onConfirm={date => { setToDate(date); setShowToPicker(false); }}
+        onConfirm={date => {
+          setToDate(date);
+          setShowToPicker(false);
+        }}
         onCancel={() => setShowToPicker(false)}
       />
 
@@ -243,17 +328,23 @@ const MaterialRequestList = props => {
 
 const getStatusColor = status => {
   switch (status?.toUpperCase()) {
-    case 'APPROVED': return '#2e7d32';
-    case 'PENDING':  return '#e65100';
-    case 'REJECTED': return '#c62828';
-    case 'CANCEL':   return '#757575';
-    case 'CLOSED':   return '#555';
-    default:         return '#1565c0';
+    case 'APPROVED':
+      return '#2e7d32';
+    case 'PENDING':
+      return '#e65100';
+    case 'REJECTED':
+      return '#c62828';
+    case 'CANCEL':
+      return '#757575';
+    case 'CLOSED':
+      return '#555';
+    default:
+      return '#1565c0';
   }
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: { flex: 1 },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -275,7 +366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
-  dateText: {fontSize: 13, color: BlackColor},
+  dateText: { fontSize: 13, color: BlackColor },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -290,16 +381,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginRight: 5,
   },
-  searchButton: {
-    height: 40,
-    backgroundColor: primaryColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginRight: 5,
-  },
-  searchIcon: {width: 22, height: 22},
   dropdownButton: {
     height: 40,
     borderColor: 'gray',
@@ -312,8 +393,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
     marginRight: 5,
   },
-  dropdownButtonText: {fontSize: 13, color: BlackColor},
-  dropdownArrow: {fontSize: 12, color: 'gray'},
+  dropdownButtonText: { fontSize: 13, color: BlackColor },
+  dropdownArrow: { fontSize: 12, color: 'gray' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -340,22 +421,41 @@ const styles = StyleSheet.create({
   dropdownItemActive: {
     backgroundColor: primaryColor,
   },
-  dropdownItemText: {fontSize: 14, color: BlackColor},
-  dropdownItemTextActive: {color: 'white'},
+  dropdownItemText: { fontSize: 14, color: BlackColor },
+  dropdownItemTextActive: { color: 'white' },
   itemContainer: {
     borderBottomWidth: 0.5,
     borderBottomColor: modalBackgroundColor,
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  itemTitleRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4},
-  itemTitle: {fontSize: 15, fontWeight: 'bold'},
-  badgeRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
-  statusBadge: {fontSize: 11, color: 'white', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2},
-  editBadge: {fontSize: 11, color: primaryColor, borderWidth: 1, borderColor: primaryColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1},
-  itemText: {fontSize: 13, paddingTop: 2, color: '#444'},
-  footer: {padding: 10, alignItems: 'center'},
-  emptyContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  itemTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 4,
+  },
+  itemTitle: { fontSize: 15, fontWeight: 'bold' },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusBadge: {
+    fontSize: 11,
+    color: 'white',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  editBadge: {
+    fontSize: 11,
+    color: primaryColor,
+    borderWidth: 1,
+    borderColor: primaryColor,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  itemText: { fontSize: 13, paddingTop: 2, color: '#444' },
+  footer: { padding: 10, alignItems: 'center' },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   fab: {
     position: 'absolute',
     bottom: 100,
@@ -369,7 +469,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     zIndex: 10,
   },
-  fabText: {fontSize: 30, color: 'white', lineHeight: 34},
+  fabText: { fontSize: 30, color: 'white', lineHeight: 34 },
 });
 
 export default MaterialRequestList;

@@ -1897,7 +1897,11 @@ export const submitMaterialRequest = async (userToken, payload) => {
   });
   if (response.status === 200 || response.status === 201) return response.json();
   const errText = await response.text();
-  throw new Error('submit MR failed: ' + response.status + ' ' + errText);
+  let message = errText;
+  try {
+    message = JSON.parse(errText)?.message ?? errText;
+  } catch (e) {}
+  throw new Error(message);
 };
 
 export const getMaterialRequestDetail = async (userToken, mrNo) => {
@@ -1939,7 +1943,11 @@ export const updateMaterialRequest = async (userToken, mrNo, payload) => {
   });
   if (response.status === 200 || response.status === 201) return response.json();
   const errText = await response.text();
-  throw new Error('update MR failed: ' + response.status + ' ' + errText);
+  let message = errText;
+  try {
+    message = JSON.parse(errText)?.message ?? errText;
+  } catch (e) {}
+  throw new Error(message);
 };
 
 export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {

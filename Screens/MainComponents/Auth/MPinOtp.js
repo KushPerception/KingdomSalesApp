@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -15,21 +17,28 @@ import {
   darkGreyTextColor,
   lightGreyTextColor,
   primaryColor,
+  RedTextColor,
+  veryLightGreyColor,
   whiteColor,
 } from '../../../utility/colors';
 import { W, fonts } from '../../../utility/GlobalStyles';
 import Strings from '../../../utility/strings';
 
-const MPinOtp = props => {
-  const input1 = useRef(null);
-  const input2 = useRef(null);
-  const input3 = useRef(null);
-  const input4 = useRef(null);
+const PIN_LENGTH = 4;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CONTAINER_WIDTH = SCREEN_WIDTH * 0.75;
+const PIN_GAP = W(16);
+const BOX_SIZE = Math.min(
+  W(64),
+  (CONTAINER_WIDTH - PIN_GAP * (PIN_LENGTH - 1)) / PIN_LENGTH,
+);
 
-  const [digit1, setdigit1] = useState('');
-  const [digit2, setdigit2] = useState('');
-  const [digit3, setdigit3] = useState('');
-  const [digit4, setdigit4] = useState('');
+const MPinOtp = props => {
+  const inputRef = useRef(null);
+
+  const [pin, setPin] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [UserAsyncMPin, setUserAsyncMPin] = useState(null);
   const [UserRoleType, setUserRoleType] = useState(null);
 
@@ -43,69 +52,35 @@ const MPinOtp = props => {
     setUserRoleType(response[1][1]);
   };
 
-  const onClickDigit1 = val => {
-    setdigit1(val);
-    if (val !== '') {
-      input2.current?.focus();
-    }
+  const onChangePin = text => {
+    setHasError(false);
+    setPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH));
   };
 
-  const onClickDigit2 = val => {
-    setdigit2(val);
-    if (val !== '') {
-      input3.current?.focus();
-    } else {
-      input1.current?.focus();
-    }
-  };
-
-  const onClickDigit3 = val => {
-    setdigit3(val);
-    if (val !== '') {
-      input4.current?.focus();
-    } else {
-      input2.current?.focus();
-    }
-  };
-
-  const onClickDigit4 = val => {
-    setdigit4(val);
-    if (val === '') {
-      input3.current?.focus();
-    }
-  };
-
-  const OnClickSubmit = (d1, d2, d3, d4) => {
-    const MPin = d1 + d2 + d3 + d4;
-    // clear fields
-    setdigit1('');
-    setdigit2('');
-    setdigit3('');
-    setdigit4('');
+  const OnClickSubmit = MPin => {
+    setPin('');
 
     if (
-      MPin.length === 4 &&
+      MPin.length === PIN_LENGTH &&
       (MPin === UserAsyncMPin || UserAsyncMPin === null)
     ) {
+      setHasError(false);
       AsyncStorage.setItem('UserMPIN', MPin);
       if (UserRoleType === 'Driver') {
         props.navigation.navigate('DriverOrders');
       } else if (UserRoleType === 'REQUESTER') {
         props.navigation.navigate('MaterialRequestList');
-      }
-      else if (UserRoleType === 'PURCHASEMANAGER') {
+      } else if (UserRoleType === 'PURCHASEMANAGER') {
         props.navigation.navigate('PurchaseManager');
-      }
-      else if (UserRoleType === 'CEO' || UserRoleType === 'MD') {
-        props.navigation.navigate('PurchaseOrderScreen',);
-      }
-      else if (UserRoleType === 'COSTCONTROLLER') {
+      } else if (UserRoleType === 'CEO' || UserRoleType === 'MD') {
+        props.navigation.navigate('PurchaseOrderScreen');
+      } else if (UserRoleType === 'COSTCONTROLLER') {
         props.navigation.navigate('CostController');
-      }
-      else {
+      } else {
         props.navigation.navigate('Home');
       }
     } else {
+      setHasError(true);
       Alert.alert('Invalid MPIN');
     }
   };
@@ -133,35 +108,49 @@ const MPinOtp = props => {
       </View>
 
       <View style={{ alignItems: 'center', marginTop: 10 }}>
-        <View style={styles.TextInPutContainer}>
-          {[
-            { ref: input1, val: digit1, fn: onClickDigit1 },
-            { ref: input2, val: digit2, fn: onClickDigit2 },
-            { ref: input3, val: digit3, fn: onClickDigit3 },
-            { ref: input4, val: digit4, fn: onClickDigit4 },
-          ].map((item, i) => (
-            <View key={i} style={styles.TextInputWidth}>
-              <TextInput
-                ref={item.ref}
-                style={styles.pinInput}
-                keyboardType="number-pad"
-                returnKeyType="done"
-                maxLength={1}
-                value={item.val}
-                onChangeText={item.fn}
-                secureTextEntry
-                textAlign="center"
-              />
-            </View>
-          ))}
-        </View>
+        <Pressable
+          style={styles.TextInPutContainer}
+          onPress={() => inputRef.current?.focus()}
+        >
+          <TextInput
+            ref={inputRef}
+            value={pin}
+            onChangeText={onChangePin}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onSubmitEditing={() => OnClickSubmit(pin)}
+            maxLength={PIN_LENGTH}
+            keyboardType="number-pad"
+            returnKeyType="done"
+            autoFocus
+            style={styles.hiddenInput}
+          />
+
+          {Array.from({ length: PIN_LENGTH }, (_, index) => {
+            const char = pin[index] || '';
+            const isFilled = !!char;
+            const isActive = isFocused && index === pin.length;
+
+            return (
+              <View
+                key={index}
+                pointerEvents="none"
+                style={[
+                  styles.pinBox,
+                  isFilled && styles.pinBoxFilled,
+                  isActive && styles.pinBoxActive,
+                  hasError && styles.pinBoxError,
+                ]}
+              >
+                <Text style={styles.pinDigit}>{char}</Text>
+              </View>
+            );
+          })}
+        </Pressable>
       </View>
 
       <View style={styles.loginButtonMargin}>
-        <LoginButton
-          title="Next"
-          onPress={() => OnClickSubmit(digit1, digit2, digit3, digit4)}
-        />
+        <LoginButton title="Next" onPress={() => OnClickSubmit(pin)} />
       </View>
 
       {UserAsyncMPin ? (
@@ -193,18 +182,43 @@ const styles = StyleSheet.create({
   LogoHeaderImage: { width: '100%', height: 150 },
   TextInPutContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '75%',
+    gap: PIN_GAP,
   },
-  TextInputWidth: { width: W(50), marginTop: 10 },
-  pinInput: {
-    fontSize: 40,
-    fontFamily: fonts.Lato_Regular,
+  hiddenInput: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0,
+  },
+  pinBox: {
+    width: BOX_SIZE,
+    height: BOX_SIZE,
+    borderRadius: 12,
+    backgroundColor: veryLightGreyColor,
+    borderWidth: 1,
+    borderColor: lightGreyTextColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pinBoxFilled: {
+    backgroundColor: whiteColor,
+    borderColor: primaryColor,
+    borderWidth: 2,
+  },
+  pinBoxActive: {
+    backgroundColor: whiteColor,
+    borderColor: primaryColor,
+    borderWidth: 2,
+  },
+  pinBoxError: {
+    borderColor: RedTextColor,
+    borderWidth: 2,
+  },
+  pinDigit: {
+    fontSize: 28,
+    fontFamily: fonts.Lato_Bold,
     color: darkGreyTextColor,
-    borderBottomWidth: 2,
-    borderBottomColor: primaryColor,
-    paddingBottom: 4,
-    width: '100%',
   },
   loginButtonMargin: { marginTop: 20 },
   SignInTextView: { marginTop: -50 },

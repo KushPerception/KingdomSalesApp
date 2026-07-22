@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   BackHandler,
@@ -12,8 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {TextInput} from 'react-native-gesture-handler';
-import {useFocusEffect} from '@react-navigation/native';
+import { TextInput } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   cancelMaterialRequestDraft,
   getMaterialRequestDepartments,
@@ -25,19 +25,20 @@ import {
   getMaterialRequestPlants,
   getMaterialRequestVehicles,
 } from '../../../utility/ApiHelpers/StagingApis';
-import {BlackColor, primaryColor} from '../../../utility/colors';
+import { BlackColor, primaryColor } from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
 
 const PRIORITY_OPTIONS = ['High', 'Normal', 'Low'];
 
-const DropdownField = ({label, value, onPress, disabled}) => (
+const DropdownField = ({ label, value, onPress, disabled }) => (
   <>
     <Text style={styles.label}>{label}</Text>
     <TouchableOpacity
       style={[styles.dropdown, disabled && styles.dropdownDisabled]}
       onPress={disabled ? undefined : onPress}
-      activeOpacity={disabled ? 1 : 0.7}>
+      activeOpacity={disabled ? 1 : 0.7}
+    >
       <Text style={[styles.dropdownText, !value && styles.placeholder]}>
         {value || `Select ${label}`}
       </Text>
@@ -78,14 +79,21 @@ const MaterialRequest1 = props => {
   }, []);
 
   const loadInitialData = async () => {
-    console.log('[MR1] loadInitialData — mode:', isEditMode ? `EDIT (${editMrNo})` : 'NEW');
+    console.log(
+      '[MR1] loadInitialData — mode:',
+      isEditMode ? `EDIT (${editMrNo})` : 'NEW',
+    );
     try {
       const t = await AsyncStorage.getItem('access_token');
       setToken(t);
 
-      console.log('[MR1] fetching parallel: detail/generate + divisions + vehicles + jobDetails');
+      console.log(
+        '[MR1] fetching parallel: detail/generate + divisions + vehicles + jobDetails',
+      );
       const [genRes, divRes, vehRes, jobRes] = await Promise.all([
-        isEditMode ? getMaterialRequestDetail(t, editMrNo) : getMaterialRequestGenerate(t),
+        isEditMode
+          ? getMaterialRequestDetail(t, editMrNo)
+          : getMaterialRequestGenerate(t),
         getMaterialRequestDivisions(t),
         getMaterialRequestVehicles(t),
         getMaterialRequestJobDetails(t),
@@ -104,7 +112,10 @@ const MaterialRequest1 = props => {
 
       if (isEditMode) {
         const d = genRes?.data ?? {};
-        console.log('[MR1] EDIT — raw detail data:', JSON.stringify(d, null, 2));
+        console.log(
+          '[MR1] EDIT — raw detail data:',
+          JSON.stringify(d, null, 2),
+        );
 
         setMrNo(d.MRNO ?? editMrNo);
         setMrDate(d.MRDATE ?? '');
@@ -113,11 +124,21 @@ const MaterialRequest1 = props => {
         const vehFound = vehList.find(v => v?.VehName === d.VEHNO);
         setVehNo(d.VEHNO ?? '');
         setVehDesc(vehFound?.CC ?? '');
-        console.log('[MR1] EDIT — set: mrNo=%s mrDate=%s priority=%s jobRefNo=%s vehNo=%s vehDesc=%s',
-          d.MRNO, d.MRDATE, d.PRIORITY, d.JOBREFNO, d.VEHNO, vehFound?.CC);
+        console.log(
+          '[MR1] EDIT — set: mrNo=%s mrDate=%s priority=%s jobRefNo=%s vehNo=%s vehDesc=%s',
+          d.MRNO,
+          d.MRDATE,
+          d.PRIORITY,
+          d.JOBREFNO,
+          d.VEHNO,
+          vehFound?.CC,
+        );
 
         if (d.DIVISION) {
-          console.log('[MR1] EDIT — fetching departments for division:', d.DIVISION);
+          console.log(
+            '[MR1] EDIT — fetching departments for division:',
+            d.DIVISION,
+          );
           setDivision(d.DIVISION);
           const deptRes = await getMaterialRequestDepartments(t, d.DIVISION);
           const deptList = deptRes?.data ?? deptRes ?? [];
@@ -133,7 +154,10 @@ const MaterialRequest1 = props => {
             setPlants(plantList);
 
             if (d.PLANT) {
-              console.log('[MR1] EDIT — fetching equipments for plant:', d.PLANT);
+              console.log(
+                '[MR1] EDIT — fetching equipments for plant:',
+                d.PLANT,
+              );
               setPlant(d.PLANT);
               const eqpRes = await getMaterialRequestEquipments(t, d.PLANT);
               const eqpList = eqpRes?.data ?? eqpRes ?? [];
@@ -142,18 +166,30 @@ const MaterialRequest1 = props => {
               setEqp(d.EQPART ?? '');
               console.log('[MR1] EDIT — set eqp:', d.EQPART);
             } else {
-              console.log('[MR1] EDIT — no PLANT in detail, skipping equipments');
+              console.log(
+                '[MR1] EDIT — no PLANT in detail, skipping equipments',
+              );
             }
           } else {
-            console.log('[MR1] EDIT — no DEPT in detail, skipping plants/equipments');
+            console.log(
+              '[MR1] EDIT — no DEPT in detail, skipping plants/equipments',
+            );
           }
         } else {
           console.log('[MR1] EDIT — no DIVISION in detail, skipping cascade');
         }
       } else {
         const mrNoVal = genRes?.data?.MRNO ?? genRes?.MRNO ?? '';
-        const mrDateVal = genRes?.data?.MRDATE ?? genRes?.MRDATE ?? moment().format('DD/MM/YYYY');
-        console.log('[MR1] NEW — generated mrNo:', mrNoVal, 'mrDate:', mrDateVal);
+        const mrDateVal =
+          genRes?.data?.MRDATE ??
+          genRes?.MRDATE ??
+          moment().format('DD/MM/YYYY');
+        console.log(
+          '[MR1] NEW — generated mrNo:',
+          mrNoVal,
+          'mrDate:',
+          mrDateVal,
+        );
         setMrNo(mrNoVal);
         setMrDate(mrDateVal);
       }
@@ -170,29 +206,39 @@ const MaterialRequest1 = props => {
   const onSelectDivision = async val => {
     console.log('[MR1] onSelectDivision:', val);
     setDivision(val);
-    setDept(''); setPlant(''); setEqp('');
-    setDepartments([]); setPlants([]); setEquipments([]);
+    setDept('');
+    setPlant('');
+    setEqp('');
+    setDepartments([]);
+    setPlants([]);
+    setEquipments([]);
     setActiveModal(null);
     try {
       const res = await getMaterialRequestDepartments(token, val);
       const list = res?.data ?? res ?? [];
       console.log('[MR1] departments loaded:', list.length);
       setDepartments(list);
-    } catch (e) { console.error('[MR1] onSelectDivision ERROR:', e?.message); }
+    } catch (e) {
+      console.error('[MR1] onSelectDivision ERROR:', e?.message);
+    }
   };
 
   const onSelectDept = async val => {
     console.log('[MR1] onSelectDept:', val);
     setDept(val);
-    setPlant(''); setEqp('');
-    setPlants([]); setEquipments([]);
+    setPlant('');
+    setEqp('');
+    setPlants([]);
+    setEquipments([]);
     setActiveModal(null);
     try {
       const res = await getMaterialRequestPlants(token, val);
       const list = res?.data ?? res ?? [];
       console.log('[MR1] plants loaded:', list.length);
       setPlants(list);
-    } catch (e) { console.error('[MR1] onSelectDept ERROR:', e?.message); }
+    } catch (e) {
+      console.error('[MR1] onSelectDept ERROR:', e?.message);
+    }
   };
 
   const onSelectPlant = async val => {
@@ -206,7 +252,9 @@ const MaterialRequest1 = props => {
       const list = res?.data ?? res ?? [];
       console.log('[MR1] equipments loaded:', list.length);
       setEquipments(list);
-    } catch (e) { console.error('[MR1] onSelectPlant ERROR:', e?.message); }
+    } catch (e) {
+      console.error('[MR1] onSelectPlant ERROR:', e?.message);
+    }
   };
 
   const handleBack = () => {
@@ -218,7 +266,7 @@ const MaterialRequest1 = props => {
       'Discard Draft',
       'Are you sure you want to cancel this draft?',
       [
-        {text: 'No', style: 'cancel'},
+        { text: 'No', style: 'cancel' },
         {
           text: 'Yes',
           style: 'destructive',
@@ -250,8 +298,23 @@ const MaterialRequest1 = props => {
       Alert.alert('Validation', 'Division is required.');
       return;
     }
-    const payload = {mrNo, mrDate, division, dept, plant, eqp, vehNo, vehDesc, priority, jobRefNo, isEditMode};
-    console.log('[MR1] handleNext → navigating to MR2 with:', JSON.stringify(payload, null, 2));
+    const payload = {
+      mrNo,
+      mrDate,
+      division,
+      dept,
+      plant,
+      eqp,
+      vehNo,
+      vehDesc,
+      priority,
+      jobRefNo,
+      isEditMode,
+    };
+    console.log(
+      '[MR1] handleNext → navigating to MR2 with:',
+      JSON.stringify(payload, null, 2),
+    );
     props.navigation.navigate('MaterialRequest2', payload);
   };
 
@@ -260,19 +323,32 @@ const MaterialRequest1 = props => {
       transparent
       visible={activeModal !== null}
       animationType="fade"
-      onRequestClose={() => setActiveModal(null)}>
-      <TouchableOpacity style={styles.overlay} onPress={() => setActiveModal(null)}>
+      onRequestClose={() => setActiveModal(null)}
+    >
+      <TouchableOpacity
+        style={styles.overlay}
+        onPress={() => setActiveModal(null)}
+      >
         <View style={styles.dropdownMenu}>
           <FlatList
             data={items}
             keyExtractor={(item, idx) => keyExtractor(item) + idx}
-            renderItem={({item}) => {
+            renderItem={({ item }) => {
               const label = keyExtractor(item);
               return (
                 <TouchableOpacity
-                  style={[styles.menuItem, selectedVal === label && styles.menuItemActive]}
-                  onPress={() => onSelect(label)}>
-                  <Text style={[styles.menuItemText, selectedVal === label && styles.menuItemTextActive]}>
+                  style={[
+                    styles.menuItem,
+                    selectedVal === label && styles.menuItemActive,
+                  ]}
+                  onPress={() => onSelect(label)}
+                >
+                  <Text
+                    style={[
+                      styles.menuItemText,
+                      selectedVal === label && styles.menuItemTextActive,
+                    ]}
+                  >
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -285,13 +361,76 @@ const MaterialRequest1 = props => {
   );
 
   const modalConfig = {
-    div:      {items: divisions,        val: division,  onSelect: onSelectDivision, key: i => i?.Division ?? i?.DIVISION ?? i?.DivName ?? i?.DIVNAME ?? String(i)},
-    dept:     {items: departments,      val: dept,      onSelect: onSelectDept,     key: i => i?.DeptName ?? i?.DEPTNAME ?? i?.Dept ?? i?.DEPT ?? String(i)},
-    plant:    {items: plants,           val: plant,     onSelect: onSelectPlant,    key: i => i?.PlantName ?? i?.PLANTNAME ?? i?.Plant ?? i?.PLANT ?? i?.SLNO ?? String(i)},
-    eqp:      {items: equipments,       val: eqp,       onSelect: v => { setEqp(v); setActiveModal(null); }, key: i => i?.EQUIP ?? i?.EqpName ?? i?.EQPNAME ?? i?.Eqp ?? i?.EQP ?? i?.SLNO ?? String(i)},
-    veh:      {items: vehicles,         val: vehNo,     onSelect: v => { const found = vehicles.find(i => i?.VehName === v); setVehNo(v); setVehDesc(found?.CC ?? ''); setActiveModal(null); }, key: i => i?.VehName ?? String(i)},
-    priority: {items: PRIORITY_OPTIONS, val: priority,  onSelect: v => { setPriority(v); setActiveModal(null); }, key: i => i},
-    job:      {items: jobDetails,       val: jobRefNo,  onSelect: v => { setJobRefNo(v); setActiveModal(null); }, key: i => String(i)},
+    div: {
+      items: divisions,
+      val: division,
+      onSelect: onSelectDivision,
+      key: i =>
+        i?.Division ?? i?.DIVISION ?? i?.DivName ?? i?.DIVNAME ?? String(i),
+    },
+    dept: {
+      items: departments,
+      val: dept,
+      onSelect: onSelectDept,
+      key: i => i?.DeptName ?? i?.DEPTNAME ?? i?.Dept ?? i?.DEPT ?? String(i),
+    },
+    plant: {
+      items: plants,
+      val: plant,
+      onSelect: onSelectPlant,
+      key: i =>
+        i?.PlantName ??
+        i?.PLANTNAME ??
+        i?.Plant ??
+        i?.PLANT ??
+        i?.SLNO ??
+        String(i),
+    },
+    eqp: {
+      items: equipments,
+      val: eqp,
+      onSelect: v => {
+        setEqp(v);
+        setActiveModal(null);
+      },
+      key: i =>
+        i?.EQUIP ??
+        i?.EqpName ??
+        i?.EQPNAME ??
+        i?.Eqp ??
+        i?.EQP ??
+        i?.SLNO ??
+        String(i),
+    },
+    veh: {
+      items: vehicles,
+      val: vehNo,
+      onSelect: v => {
+        const found = vehicles.find(i => i?.VehName === v);
+        setVehNo(v);
+        setVehDesc(found?.CC ?? '');
+        setActiveModal(null);
+      },
+      key: i => i?.VehName ?? String(i),
+    },
+    priority: {
+      items: PRIORITY_OPTIONS,
+      val: priority,
+      onSelect: v => {
+        setPriority(v);
+        setActiveModal(null);
+      },
+      key: i => i,
+    },
+    job: {
+      items: jobDetails,
+      val: jobRefNo,
+      onSelect: v => {
+        setJobRefNo(v);
+        setActiveModal(null);
+      },
+      key: i => String(i),
+    },
   };
 
   const active = activeModal ? modalConfig[activeModal] : null;
@@ -311,25 +450,69 @@ const MaterialRequest1 = props => {
           <View style={styles.row}>
             <View style={styles.halfField}>
               <Text style={styles.label}>MR No</Text>
-              <TextInput style={[styles.input, styles.readOnly]} value={mrNo} editable={false} />
+              <TextInput
+                style={[styles.input, styles.readOnly]}
+                value={mrNo}
+                editable={false}
+              />
             </View>
             <View style={styles.halfField}>
               <Text style={styles.label}>Date</Text>
-              <TextInput style={[styles.input, styles.readOnly]} value={mrDate} editable={false} />
+              <TextInput
+                style={[styles.input, styles.readOnly]}
+                value={mrDate}
+                editable={false}
+              />
             </View>
           </View>
 
-          <DropdownField label="Stk Division *" value={division} onPress={() => setActiveModal('div')} />
-          <DropdownField label="Dept Name"    value={dept}     onPress={() => setActiveModal('dept')}  disabled={!division} />
-          <DropdownField label="Plant Name"   value={plant}    onPress={() => setActiveModal('plant')} disabled={!dept} />
-          <DropdownField label="EQP Name"     value={eqp}      onPress={() => setActiveModal('eqp')}   disabled={!plant} />
-          <DropdownField label="Vehicle No"     value={vehNo}    onPress={() => setActiveModal('veh')} />
+          <DropdownField
+            label="Stk Division *"
+            value={division}
+            onPress={() => setActiveModal('div')}
+          />
+          <DropdownField
+            label="Dept Name"
+            value={dept}
+            onPress={() => setActiveModal('dept')}
+            disabled={!division}
+          />
+          <DropdownField
+            label="Plant Name"
+            value={plant}
+            onPress={() => setActiveModal('plant')}
+            disabled={!dept}
+          />
+          <DropdownField
+            label="EQP Name"
+            value={eqp}
+            onPress={() => setActiveModal('eqp')}
+            disabled={!plant}
+          />
+          <DropdownField
+            label="Vehicle No"
+            value={vehNo}
+            onPress={() => setActiveModal('veh')}
+          />
 
           <Text style={styles.label}>Vehicle Desc</Text>
-          <TextInput style={styles.input} value={vehDesc} onChangeText={setVehDesc} placeholder="Vehicle Desc" />
+          <TextInput
+            style={styles.input}
+            value={vehDesc}
+            onChangeText={setVehDesc}
+            placeholder="Vehicle Desc"
+          />
 
-          <DropdownField label="Priority" value={priority}  onPress={() => setActiveModal('priority')} />
-          <DropdownField label="Job Ref No" value={jobRefNo}  onPress={() => setActiveModal('job')} />
+          <DropdownField
+            label="Priority"
+            value={priority}
+            onPress={() => setActiveModal('priority')}
+          />
+          <DropdownField
+            label="Job Ref No"
+            value={jobRefNo}
+            onPress={() => setActiveModal('job')}
+          />
 
           <TouchableOpacity style={styles.NextBtn} onPress={handleNext}>
             <Text style={styles.submitText}>NEXT</Text>
@@ -337,17 +520,24 @@ const MaterialRequest1 = props => {
         </ScrollView>
       )}
 
-      {active && renderModal(active.items, active.val, active.onSelect, active.key)}
+      {active &&
+        renderModal(active.items, active.val, active.onSelect, active.key)}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
-  form: {padding: 16},
-  row: {flexDirection: 'row', gap: 10},
-  halfField: {flex: 1},
-  label: {fontSize: 13, fontWeight: '600', color: BlackColor, marginBottom: 4, marginTop: 12},
+  container: { flex: 1 },
+  form: { padding: 16 },
+  row: { flexDirection: 'row', gap: 10 },
+  halfField: { flex: 1 },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: BlackColor,
+    marginBottom: 4,
+    marginTop: 12,
+  },
   input: {
     height: 40,
     borderColor: 'gray',
@@ -357,7 +547,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     color: BlackColor,
   },
-  readOnly: {backgroundColor: '#f0f0f0'},
+  readOnly: { backgroundColor: '#f0f0f0' },
   dropdown: {
     height: 40,
     borderColor: 'gray',
@@ -369,10 +559,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  dropdownDisabled: {backgroundColor: '#f0f0f0'},
-  dropdownText: {fontSize: 14, color: BlackColor},
-  placeholder: {color: '#aaa'},
-  arrow: {fontSize: 12, color: 'gray'},
+  dropdownDisabled: { backgroundColor: '#f0f0f0' },
+  dropdownText: { fontSize: 14, color: BlackColor },
+  placeholder: { color: '#aaa' },
+  arrow: { fontSize: 12, color: 'gray' },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -387,10 +577,10 @@ const styles = StyleSheet.create({
     elevation: 5,
     maxHeight: 300,
   },
-  menuItem: {paddingVertical: 12, paddingHorizontal: 16},
-  menuItemActive: {backgroundColor: primaryColor},
-  menuItemText: {fontSize: 14, color: BlackColor},
-  menuItemTextActive: {color: 'white'},
+  menuItem: { paddingVertical: 12, paddingHorizontal: 16 },
+  menuItemActive: { backgroundColor: primaryColor },
+  menuItemText: { fontSize: 14, color: BlackColor },
+  menuItemTextActive: { color: 'white' },
   NextBtn: {
     marginTop: 24,
     backgroundColor: primaryColor,
@@ -398,7 +588,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  submitText: {color: 'white', fontWeight: '700', fontSize: 15},
+  submitText: { color: 'white', fontWeight: '700', fontSize: 15 },
 });
 
 export default MaterialRequest1;
