@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,93 +11,33 @@ import {
   View,
 } from 'react-native';
 import {searchIcon} from '../../../Images';
-import {mainUrl} from '../../../utility/ApiHelpers/StagingApis';
+import usePaginatedList from '../../../hooks/usePaginatedList';
+import {fetchSupplierList} from '../../../utility/ApiHelpers/LandingCostApi';
 import {BlackColor, darkGreyTextColor, lightGreyTextColor, primaryColor, whiteColor} from '../../../utility/colors';
 import {fonts} from '../../../utility/GlobalStyles';
 import HeaderComponent from '../../CommonComponents/Header';
 
 const SupplierPickerScreen = props => {
   const {onSelect} = props.route?.params ?? {};
+  const tokenRef = useRef(null);
 
   const [search, setSearch] = useState('');
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [noMorePages, setNoMorePages] = useState(false);
-  const [footerLoading, setFooterLoading] = useState(false);
+
+  const {list, loading, footerLoading, search: runSearch, loadMore} = usePaginatedList({
+    fetchPage: (keyword, page) => fetchSupplierList(tokenRef.current, keyword, page),
+  });
 
   useEffect(() => {
-    console.log('[SupplierPickerScreen] mounted — loading initial supplier list');
-    fetchSuppliers(1, '', true);
+    (async () => {
+      tokenRef.current = await AsyncStorage.getItem('access_token');
+      runSearch('');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchSuppliers = async (pageNo = 1, keyword = '', reset = false) => {
-    console.log(`[SupplierPickerScreen] fetchSuppliers: pageNo=${pageNo} | keyword="${keyword}" | reset=${reset}`);
-
-    if (reset) {
-      setLoading(true);
-      setList([]);
-      setNoMorePages(false);
-    } else {
-      setFooterLoading(true);
-    }
-
-    try {
-      const token = await AsyncStorage.getItem('access_token');
-      console.log('[SupplierPickerScreen] fetchSuppliers: token =', token ? 'present' : 'MISSING');
-
-      const url = `${mainUrl}api/landing-cost/suppliers?search=${encodeURIComponent(keyword)}&per_page=20&page=${pageNo}`;
-      console.log('[SupplierPickerScreen] fetchSuppliers: url =', url);
-
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {Accept: 'application/json', Authorization: `Bearer ${token}`},
-      });
-      console.log('[SupplierPickerScreen] fetchSuppliers: status =', res.status);
-
-      const json = await res.json();
-      console.log('[SupplierPickerScreen] fetchSuppliers: raw =', JSON.stringify(json, null, 2));
-
-      const items = json.data?.data ?? json.data ?? [];
-      const lastPage = json.data?.last_page ?? 1;
-      const total = json.data?.total ?? items.length;
-
-      console.log(`[SupplierPickerScreen] fetchSuppliers: items=${items.length} | lastPage=${lastPage} | total=${total}`);
-
-      setList(prev => {
-        const updated = reset ? items : [...prev, ...items];
-        console.log(`[SupplierPickerScreen] fetchSuppliers: list updated | total in state=${updated.length}`);
-        return updated;
-      });
-      setPage(pageNo);
-      setNoMorePages(pageNo >= lastPage);
-      console.log(`[SupplierPickerScreen] fetchSuppliers: noMorePages=${pageNo >= lastPage}`);
-    } catch (err) {
-      console.error('[SupplierPickerScreen] fetchSuppliers: ERROR =', err.message);
-    } finally {
-      setLoading(false);
-      setFooterLoading(false);
-      console.log('[SupplierPickerScreen] fetchSuppliers: done');
-    }
-  };
-
-  const onSearchPress = () => {
-    console.log(`[SupplierPickerScreen] onSearchPress: keyword="${search}"`);
-    fetchSuppliers(1, search, true);
-  };
-
-  const handleLoadMore = () => {
-    console.log(`[SupplierPickerScreen] handleLoadMore: footerLoading=${footerLoading} | noMorePages=${noMorePages} | currentPage=${page}`);
-    if (!footerLoading && !noMorePages) {
-      console.log('[SupplierPickerScreen] handleLoadMore: fetching page', page + 1);
-      fetchSuppliers(page + 1, search, false);
-    } else {
-      console.log('[SupplierPickerScreen] handleLoadMore: skipped');
-    }
-  };
+  const onSearchPress = () => runSearch(search);
 
   const handleSelect = item => {
-    console.log('[SupplierPickerScreen] handleSelect: full item =', JSON.stringify(item));
     onSelect && onSelect(item);
     props.navigation.goBack();
   };
@@ -107,10 +47,7 @@ const SupplierPickerScreen = props => {
       <HeaderComponent
         BackTitle
         Title="Select Supplier"
-        onBackPress={() => {
-          console.log('[SupplierPickerScreen] back pressed');
-          props.navigation.goBack();
-        }}
+        onBackPress={() => props.navigation.goBack()}
       />
 
       {/* Search Row — same pattern as MaterialRequestList */}
@@ -120,10 +57,7 @@ const SupplierPickerScreen = props => {
           placeholder="Search supplier..."
           placeholderTextColor={lightGreyTextColor}
           value={search}
-          onChangeText={text => {
-            console.log(`[SupplierPickerScreen] onChangeText: "${text}"`);
-            setSearch(text);
-          }}
+          onChangeText={setSearch}
           returnKeyType="search"
           onSubmitEditing={onSearchPress}
         />
@@ -144,7 +78,7 @@ const SupplierPickerScreen = props => {
               <Text style={styles.itemName}>{item.Name}</Text>
             </TouchableOpacity>
           )}
-          onEndReached={handleLoadMore}
+          onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={
             footerLoading

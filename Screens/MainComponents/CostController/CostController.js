@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,126 +10,37 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
+import usePaginatedList from '../../../hooks/usePaginatedList';
+import { fetchLandingCostList } from '../../../utility/ApiHelpers/LandingCostApi';
 import { lightGreyTextColor, primaryColor } from '../../../utility/colors';
 import { fonts } from '../../../utility/GlobalStyles';
 import HeaderComponent from '../../CommonComponents/Header';
 import LandingCostCard from './LandingCostCard';
 
 const CostController = props => {
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [noMorePages, setNoMorePages] = useState(false);
-  const [footerLoading, setFooterLoading] = useState(false);
+  const tokenRef = useRef(null);
+
+  const { list, loading, footerLoading, search, loadMore } = usePaginatedList({
+    fetchPage: (filters, page) =>
+      fetchLandingCostList(tokenRef.current, filters, page),
+  });
 
   useFocusEffect(
     useCallback(() => {
-      console.log('[CostController] focused — refreshing list');
-      fetchData(1, true);
+      (async () => {
+        tokenRef.current = await AsyncStorage.getItem('access_token');
+        search({});
+      })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
 
-  const fetchData = async (pageNo = 1, reset = false) => {
-    console.log(
-      `[CostController] fetchData: pageNo=${pageNo} | reset=${reset}`,
-    );
-
-    if (reset) {
-      setLoading(true);
-      setList([]);
-      setNoMorePages(false);
-    } else {
-      setFooterLoading(true);
-    }
-
-    try {
-      const token = await AsyncStorage.getItem('access_token');
-      console.log(
-        '[CostController] fetchData: token =',
-        token ? 'present' : 'MISSING',
-      );
-
-      const url = `${mainUrl}api/landing-cost/list?from_date=&to_date=&lcno=&supname=&pono=&posted=&per_page=20&page=${pageNo}`;
-      console.log('[CostController] fetchData: url =', url);
-
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('[CostController] fetchData: response status =', res.status);
-
-      const json = await res.json();
-      console.log(
-        '[CostController] fetchData: raw response =',
-        JSON.stringify(json, null, 2),
-      );
-
-      if (!json.success) {
-        console.warn(
-          '[CostController] fetchData: success=false | message =',
-          json.message,
-        );
-      }
-
-      const items = json.data?.data ?? [];
-      const lastPage = json.data?.last_page ?? 1;
-      const currentPage = json.data?.current_page ?? pageNo;
-      const total = json.data?.total ?? 0;
-
-      console.log(
-        `[CostController] fetchData: items count=${items.length} | currentPage=${currentPage} | lastPage=${lastPage} | total=${total}`,
-      );
-
-      setList(prev => {
-        const updated = reset ? items : [...prev, ...items];
-        console.log(
-          `[CostController] fetchData: list updated | total in state=${updated.length}`,
-        );
-        return updated;
-      });
-      setPage(pageNo);
-      setNoMorePages(pageNo >= lastPage);
-      console.log(
-        `[CostController] fetchData: noMorePages=${pageNo >= lastPage}`,
-      );
-    } catch (err) {
-      console.error('[CostController] fetchData: ERROR =', err.message);
-      console.error('[CostController] fetchData: stack =', err.stack);
-    } finally {
-      setLoading(false);
-      setFooterLoading(false);
-      console.log('[CostController] fetchData: done, loading=false');
-    }
-  };
-
-  const handleLoadMore = () => {
-    console.log(
-      `[CostController] handleLoadMore: footerLoading=${footerLoading} | noMorePages=${noMorePages} | currentPage=${page}`,
-    );
-    if (!footerLoading && !noMorePages) {
-      console.log('[CostController] handleLoadMore: fetching page', page + 1);
-      fetchData(page + 1, false);
-    } else {
-      console.log(
-        '[CostController] handleLoadMore: skipped (loading or no more pages)',
-      );
-    }
-  };
-
   const handleLogout = () => {
     Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
-      {
-        text: 'NO',
-        style: 'cancel',
-        onPress: () => console.log('[CostController] handleLogout: cancelled'),
-      },
+      { text: 'NO', style: 'cancel' },
       {
         text: 'YES',
         onPress: async () => {
-          console.log(
-            '[CostController] handleLogout: clearing storage and navigating to Login',
-          );
           await AsyncStorage.clear();
           props.navigation.replace('Login');
         },
@@ -157,21 +68,15 @@ const CostController = props => {
           renderItem={({ item }) => (
             <LandingCostCard
               item={item}
-              onPress={() => {
-                console.log(
-                  '[CostController] card pressed — navigating to edit | LCNO =',
-                  item.LCNO,
-                  '| POSTED =',
-                  item.POSTED,
-                );
+              onPress={() =>
                 props.navigation.navigate('CreateLandingCost', {
                   editItem: item,
-                });
-              }}
+                })
+              }
             />
           )}
           contentContainerStyle={styles.listContent}
-          onEndReached={handleLoadMore}
+          onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={
             footerLoading ? (
@@ -195,12 +100,7 @@ const CostController = props => {
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
-        onPress={() => {
-          console.log(
-            '[CostController] FAB pressed — navigating to CreateLandingCost',
-          );
-          props.navigation.navigate('CreateLandingCost');
-        }}
+        onPress={() => props.navigation.navigate('CreateLandingCost')}
       >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>

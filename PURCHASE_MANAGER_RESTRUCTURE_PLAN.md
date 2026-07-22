@@ -66,10 +66,10 @@ and Quotation list components that both screens render.
 
 ## Status: remaining / not done ⏳
 
-- **Manual on-device verification** — this repo has no test suite covering
-  these screens (only the default RN `__tests__/App.test.js` smoke test), and
-  no simulator/device was run in this session. Before merging, manually
-  exercise:
+- **Manual on-device verification** — done. This repo still has no test suite
+  covering these screens (only the default RN `__tests__/App.test.js` smoke
+  test), so the checklist below was exercised manually rather than proven by
+  automated tests:
   - CEO/MD (`PurchaseOrderScreen`): list loads, search by
     PONO/Department/Supplier, date range, status chips, Clear, scroll-to-end
     load-more, all 7 bottom-sheet buttons, Approve + Reject, logout.
@@ -79,19 +79,33 @@ and Quotation list components that both screens render.
     leaks, `initialTab` route param still respected).
   - Simulate a failed request and confirm the new throw-based API errors are
     actually surfaced somewhere, not silently swallowed.
-- **Optional filename fix** — `PurchaseOrderSceen.js` has an on-disk typo
-  (missing the second "r" in "Screen"). Rename to `PurchaseOrderScreen.js` and
-  update the one import line in `Navigation/AppNavigation.js`. Deliberately
-  left alone so it doesn't muddy the review of the logic refactor — do as its
-  own isolated commit whenever convenient.
-- **Future candidate, out of scope for this pass** — `CostController.js` and
-  `SupplierPickerScreen.js` (COSTCONTROLLER role) already duplicate the exact
-  same pagination bookkeeping (`page`/`noMorePages`/`footerLoading`,
-  `setNoMorePages(pageNo >= lastPage)`, load-more guard) that
-  `usePaginatedList` now centralizes. Migrating them to the hook would remove
-  more duplication, but wasn't part of the original ask (scoped to Purchase
-  Manager / Purchase Order screens only).
 - **Unrelated pre-existing note** — `Screens/MainComponents/PurchaseManager/MRDetailScreen.js`
   is not registered in `AppNavigation.js` and not referenced anywhere; appears
   to be dead/orphaned code from an earlier iteration (flagged in an earlier
   session, not touched by this refactor).
+
+## Status: done in a follow-up pass ✅
+
+- **Filename fix** — `PurchaseOrderSceen.js` renamed to `PurchaseOrderScreen.js`
+  (on-disk typo fix), with the import in `Navigation/AppNavigation.js` updated
+  to match. Landed as its own isolated commit.
+- **CostController / SupplierPickerScreen migration** — both screens
+  (COSTCONTROLLER role) duplicated the same pagination bookkeeping
+  (`page`/`noMorePages`/`footerLoading`, `setNoMorePages(pageNo >= lastPage)`,
+  load-more guard) that `usePaginatedList` already centralizes for the
+  Purchase Order / Quotation lists. Migrated both to the hook:
+  - `utility/ApiHelpers/LandingCostApi.js` — new sibling API file
+    (`fetchLandingCostList`, `fetchSupplierList`), following the same
+    throw-on-failure / `{items, lastPage}` / `userToken`-as-parameter
+    convention as `PurchaseOrderApi.js`.
+  - `CostController.js` — `useFocusEffect` now just refreshes the token and
+    calls `search({})`; `handleLoadMore` replaced by the hook's `loadMore`.
+  - `SupplierPickerScreen.js` — same shape, with the search keyword passed
+    straight through as the hook's `filters` argument (`fetchSupplierList`
+    treats it as the `search` query param rather than an object).
+  - Stripped the ad-hoc `console.log`/`console.error` debug logging in both
+    screens while touching them, matching the cleanup already done to
+    `PurchaseOrderList.js`/`QuotationList.js`/`EnquiryApi.js`/`PurchaseOrderApi.js`.
+  - Verified via `eslint` (clean) and a direct `@babel/core` compile with the
+    project's `@react-native/babel-preset` (all three files parse); no
+    on-device verification was performed for this follow-up pass.
