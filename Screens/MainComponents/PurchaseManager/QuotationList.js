@@ -89,10 +89,7 @@ const QuotationList = ({ navigation }) => {
     search(buildFilters('Pending'));
   };
 
-  const openSheet = eq => {
-    console.log('[QuotationList] openSheet eq:', JSON.stringify(eq, null, 2));
-    setBottomSheet({ visible: true, eq });
-  };
+  const openSheet = eq => setBottomSheet({ visible: true, eq });
   const closeSheet = () => setBottomSheet({ visible: false, eq: null });
 
   const openApproveModal = eq => {
@@ -104,8 +101,6 @@ const QuotationList = ({ navigation }) => {
   const handleApprove = async () => {
     const eqNo = approveModal.eq?.eq_no;
     const dtslno = approveModal.eq?.dtslno;
-
-    console.log('[QuotationList] handleApprove eqNo:', eqNo, '| remarks:', approvalRemarks, approveModal.eq);
     setApproving(true);
     try {
       await approveEnquiry(tokenRef.current, eqNo, approvalRemarks, dtslno);

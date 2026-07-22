@@ -25,7 +25,6 @@ export const fetchPurchaseOrderList = async (userToken, filters, page = 1) => {
     headers: { Authorization: 'Bearer ' + userToken },
   });
   const json = await response.json();
-  console.log('fetchPurchaseOrderList response:', json);
   if (response.status !== 200 && response.status !== 201) {
     throw new Error(
       'fetch PO list failed: ' + response.status + ' ' + JSON.stringify(json),

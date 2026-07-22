@@ -37,9 +37,7 @@ export const fetchQuotationList = async (userToken, filters, page = 1) => {
 };
 
 export const approveEnquiry = async (userToken, eqNo, remarks, dtslno) => {
-  console.log('[EnquiryApi] approveEnquiry called with eqNo:', eqNo, '| remarks:', remarks, '| dtslno:', dtslno);
   const url = `${StagApiUrl}/enquiry/${dtslno}/approve`;
-  console.log('[EnquiryApi] Sending POST request to URL:', url, '| with body:', { approval_remarks: remarks });
   const response = await fetch(url, {
     method: 'POST',
     headers: {

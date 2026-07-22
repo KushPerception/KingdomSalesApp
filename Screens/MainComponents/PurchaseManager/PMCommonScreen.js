@@ -96,7 +96,6 @@ const PODetailView = ({data}) => {
 
 // ─── Detail renderer — renders every key/value from the data object ───────────
 const DetailView = ({data}) => {
-  console .log('[DetailView] data =', JSON.stringify(data, null, 2));
   if (!data) return null;
 
   // Pull out nested arrays (items, enquiries, etc.) to render separately
