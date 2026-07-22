@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import React, {Fragment, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useEffect, useRef} from 'react';
 import {Alert, BackHandler} from 'react-native';
 import AddNewCustomer from '../Screens/MainComponents/AddNewCustomer/AddNewCustomer';
 import ProductInvoice from '../Screens/MainComponents/AddProduct/ProductInvoice';
@@ -47,37 +47,38 @@ import SupplierPickerScreen from '../Screens/MainComponents/CostController/Suppl
 
 const Stack = createStackNavigator();
 
+const EXIT_CONFIRM_SCREENS = [
+  'Home',
+  'DriverOrderList',
+  'DriverOrders',
+  'MaterialRequestList',
+  'PurchaseManager',
+  'PurchaseOrderScreen',
+  'CostController',
+  'Login',
+];
+
 const AppNavigator = () => {
-  const [CurrentScreen, setCurrentScreen] = useState(null);
-  const [PreviousScreen, setPreviousScreen] = useState(null);
-
-  const backAction = () => {
-    if (
-      CurrentScreen === 'Home' ||
-      CurrentScreen === 'DriverOrderList' ||
-      CurrentScreen === 'DriverOrders' ||
-      CurrentScreen === 'MaterialRequestList' ||
-      CurrentScreen === 'PurchaseManager' ||
-      CurrentScreen === 'PurchaseOrderScreen' ||
-      CurrentScreen === 'CostController' ||
-      CurrentScreen === 'Login'
-    ) {
-      Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [
-        {text: 'Cancel', onPress: () => null, style: 'cancel'},
-        {text: 'YES', onPress: () => BackHandler.exitApp()},
-      ]);
-      return true;
-    }
-  };
-
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => subscription.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [CurrentScreen, PreviousScreen]);
-
   const navigationRef = useRef();
   const routeNameRef = useRef();
+
+  useEffect(() => {
+    const backAction = () => {
+      const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+      console.log('[AppNavigation] hardwareBackPress, currentRouteName =', currentRouteName);
+      if (EXIT_CONFIRM_SCREENS.includes(currentRouteName)) {
+        Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [
+          {text: 'Cancel', onPress: () => null, style: 'cancel'},
+          {text: 'YES', onPress: () => BackHandler.exitApp()},
+        ]);
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => subscription.remove();
+  }, []);
 
   return (
     <Fragment>
@@ -87,13 +88,8 @@ const AppNavigator = () => {
           (routeNameRef.current =
             navigationRef.current.getCurrentRoute().name)
         }
-        onStateChange={async () => {
-          const previousRouteName = routeNameRef.current;
-          const currentRouteName =
-            navigationRef.current.getCurrentRoute().name;
-          setCurrentScreen(currentRouteName);
-          setPreviousScreen(previousRouteName);
-          routeNameRef.current = currentRouteName;
+        onStateChange={() => {
+          routeNameRef.current = navigationRef.current.getCurrentRoute().name;
         }}>
         {/* headerMode="none" was removed in React Navigation 6+.
             Use screenOptions={{ headerShown: false }} instead. */}

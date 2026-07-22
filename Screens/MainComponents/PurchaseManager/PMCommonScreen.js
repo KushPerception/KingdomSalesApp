@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import HeaderComponent from '../../CommonComponents/Header';
 import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
 import { mainUrl } from '../../../utility/ApiHelpers/StagingApis';
@@ -625,6 +627,16 @@ const PMCommonScreen = props => {
       isDetail: false,
     });
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        props.navigation.goBack();
+        return true;
+      });
+      return () => sub.remove();
+    }, [props.navigation]),
+  );
 
   useEffect(() => {
     console.log('[PMCommonScreen] mounted');
