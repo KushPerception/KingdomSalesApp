@@ -1,7 +1,7 @@
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import React, {Fragment, useEffect, useRef} from 'react';
-import {Alert, BackHandler} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { Fragment, useEffect, useRef } from 'react';
+import { Alert, BackHandler } from 'react-native';
 import AddNewCustomer from '../Screens/MainComponents/AddNewCustomer/AddNewCustomer';
 import ProductInvoice from '../Screens/MainComponents/AddProduct/ProductInvoice';
 import ChangePassword from '../Screens/MainComponents/Auth/ChangePassword';
@@ -33,9 +33,9 @@ import DriverCashReceipt from '../Screens/MainComponents/Home/DriverCashReceipt'
 import CreateCashReceipt from '../Screens/MainComponents/Home/CreateCashReceipt';
 import EditCashReceipt from '../Screens/MainComponents/Home/EditCashReceipt';
 import MaterialRequestList from '../Screens/MainComponents/MaterialRequest/MaterialRequestList';
-import MaterialRequest1 from '../Screens/MainComponents/MaterialRequest/MaterialRequest1';
-import MaterialRequest2 from '../Screens/MainComponents/MaterialRequest/MaterialRequest2';
-import MaterialRequest3 from '../Screens/MainComponents/MaterialRequest/MaterialRequest3';
+import MaterialRequestForm from '../Screens/MainComponents/MaterialRequest/MaterialRequestForm';
+import MaterialRequestItems from '../Screens/MainComponents/MaterialRequest/MaterialRequestItems';
+import MaterialRequestStockPicker from '../Screens/MainComponents/MaterialRequest/MaterialRequestStockPicker';
 import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest/MaterialRequestAttachment';
 import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManager';
 import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/PMCommonScreen';
@@ -43,7 +43,6 @@ import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/Purch
 import CostController from '../Screens/MainComponents/CostController/CostController';
 import CreateLandingCost from '../Screens/MainComponents/CostController/CreateLandingCost';
 import SupplierPickerScreen from '../Screens/MainComponents/CostController/SupplierPickerScreen';
-
 
 const Stack = createStackNavigator();
 
@@ -65,18 +64,24 @@ const AppNavigator = () => {
   useEffect(() => {
     const backAction = () => {
       const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
-      console.log('[AppNavigation] hardwareBackPress, currentRouteName =', currentRouteName);
+      console.log(
+        '[AppNavigation] hardwareBackPress, currentRouteName =',
+        currentRouteName,
+      );
       if (EXIT_CONFIRM_SCREENS.includes(currentRouteName)) {
         Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [
-          {text: 'Cancel', onPress: () => null, style: 'cancel'},
-          {text: 'YES', onPress: () => BackHandler.exitApp()},
+          { text: 'Cancel', onPress: () => null, style: 'cancel' },
+          { text: 'YES', onPress: () => BackHandler.exitApp() },
         ]);
         return true;
       }
       return false;
     };
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
     return () => subscription.remove();
   }, []);
 
@@ -85,17 +90,18 @@ const AppNavigator = () => {
       <NavigationContainer
         ref={navigationRef}
         onReady={() =>
-          (routeNameRef.current =
-            navigationRef.current.getCurrentRoute().name)
+          (routeNameRef.current = navigationRef.current.getCurrentRoute().name)
         }
         onStateChange={() => {
           routeNameRef.current = navigationRef.current.getCurrentRoute().name;
-        }}>
+        }}
+      >
         {/* headerMode="none" was removed in React Navigation 6+.
             Use screenOptions={{ headerShown: false }} instead. */}
         <Stack.Navigator
           initialRouteName="Splash"
-          screenOptions={{headerShown: false}}>
+          screenOptions={{ headerShown: false }}
+        >
           <Stack.Screen name="Splash" component={Splash} />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Login" component={Login} />
@@ -118,10 +124,7 @@ const AppNavigator = () => {
           />
           <Stack.Screen name="DelieveryNote" component={DelieveryNote} />
           <Stack.Screen name="UpdateOrders" component={UpdateOrders} />
-          <Stack.Screen
-            name="OrderHtmlInvoice"
-            component={OrderHtmlInvoice}
-          />
+          <Stack.Screen name="OrderHtmlInvoice" component={OrderHtmlInvoice} />
           <Stack.Screen name="NeedAReciept" component={NeedAReciept} />
           <Stack.Screen name="PdfView" component={PdfView} />
           <Stack.Screen name="ResetMPIN" component={ResetMPIN} />
@@ -144,17 +147,41 @@ const AppNavigator = () => {
             component={OrderHtmlInvoiceSales}
           />
           <Stack.Screen name="ProductInvoice" component={ProductInvoice} />
-          <Stack.Screen name="MaterialRequestList" component={MaterialRequestList} />
-          <Stack.Screen name="MaterialRequest1" component={MaterialRequest1} />
-          <Stack.Screen name="MaterialRequest2" component={MaterialRequest2} />
-          <Stack.Screen name="MaterialRequest3" component={MaterialRequest3} />
-          <Stack.Screen name="MaterialRequestAttachment" component={MaterialRequestAttachment} />
+          <Stack.Screen
+            name="MaterialRequestList"
+            component={MaterialRequestList}
+          />
+          <Stack.Screen
+            name="MaterialRequestForm"
+            component={MaterialRequestForm}
+          />
+          <Stack.Screen
+            name="MaterialRequestItems"
+            component={MaterialRequestItems}
+          />
+          <Stack.Screen
+            name="MaterialRequestStockPicker"
+            component={MaterialRequestStockPicker}
+          />
+          <Stack.Screen
+            name="MaterialRequestAttachment"
+            component={MaterialRequestAttachment}
+          />
           <Stack.Screen name="PurchaseManager" component={PurchaseManager} />
           <Stack.Screen name="PMCommonScreen" component={PMCommonScreen} />
-          <Stack.Screen name="PurchaseOrderScreen" component={PurchaseOrderScreen} />
+          <Stack.Screen
+            name="PurchaseOrderScreen"
+            component={PurchaseOrderScreen}
+          />
           <Stack.Screen name="CostController" component={CostController} />
-          <Stack.Screen name="CreateLandingCost" component={CreateLandingCost} />
-          <Stack.Screen name="SupplierPickerScreen" component={SupplierPickerScreen} />
+          <Stack.Screen
+            name="CreateLandingCost"
+            component={CreateLandingCost}
+          />
+          <Stack.Screen
+            name="SupplierPickerScreen"
+            component={SupplierPickerScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>

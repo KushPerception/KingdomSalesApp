@@ -15,12 +15,13 @@ import {
   getMaterialRequestDetail,
   submitMaterialRequest,
   updateMaterialRequest,
-} from '../../../utility/ApiHelpers/StagingApis';
+} from '../../../utility/ApiHelpers/MaterialRequestApi';
 import { BlackColor, primaryColor } from '../../../utility/colors';
+import FabButton from '../../CommonComponents/FabButton';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
 
-const MaterialRequest2 = props => {
+const MaterialRequestItems = props => {
   const {
     mrNo,
     mrDate,
@@ -76,7 +77,6 @@ const MaterialRequest2 = props => {
   };
 
   const onStockSelected = stock => {
-    console.log('onStockSelected:', JSON.stringify(stock));
     const stockcode =
       stock?.STOCKCODE ?? stock?.StockCode ?? stock?.stockcode ?? '';
     setItems(prev => [
@@ -220,10 +220,6 @@ const MaterialRequest2 = props => {
   const handleNext = async () => {
     if (!validateItems()) return;
     const payload = buildPayload();
-    console.log(
-      'MaterialRequest2 NEXT payload:',
-      JSON.stringify(payload, null, 2),
-    );
 
     if (isEditMode) {
       setSubmitting(true);
@@ -329,19 +325,15 @@ const MaterialRequest2 = props => {
         </ScrollView>
       )}
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
+      <FabButton
         onPress={() =>
           canEdit
-            ? props.navigation.navigate('MaterialRequest3', {
+            ? props.navigation.navigate('MaterialRequestStockPicker', {
                 onStockSelected: onStockSelectedRef,
               })
             : blockEdit()
         }
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 };
@@ -405,23 +397,6 @@ const styles = StyleSheet.create({
   },
   nextBtnDisabled: { opacity: 0.6 },
   nextBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: primaryColor,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  fabIcon: { fontSize: 28, color: 'white', lineHeight: 32 },
 });
 
-export default MaterialRequest2;
+export default MaterialRequestItems;

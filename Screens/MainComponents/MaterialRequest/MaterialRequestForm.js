@@ -24,7 +24,7 @@ import {
   getMaterialRequestJobDetails,
   getMaterialRequestPlants,
   getMaterialRequestVehicles,
-} from '../../../utility/ApiHelpers/StagingApis';
+} from '../../../utility/ApiHelpers/MaterialRequestApi';
 import { BlackColor, primaryColor } from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
@@ -47,7 +47,7 @@ const DropdownField = ({ label, value, onPress, disabled }) => (
   </>
 );
 
-const MaterialRequest1 = props => {
+const MaterialRequestForm = props => {
   const editMrNo = props.route?.params?.mrno ?? null;
   const isEditMode = !!editMrNo;
 
@@ -79,17 +79,10 @@ const MaterialRequest1 = props => {
   }, []);
 
   const loadInitialData = async () => {
-    console.log(
-      '[MR1] loadInitialData — mode:',
-      isEditMode ? `EDIT (${editMrNo})` : 'NEW',
-    );
     try {
       const t = await AsyncStorage.getItem('access_token');
       setToken(t);
 
-      console.log(
-        '[MR1] fetching parallel: detail/generate + divisions + vehicles + jobDetails',
-      );
       const [genRes, divRes, vehRes, jobRes] = await Promise.all([
         isEditMode
           ? getMaterialRequestDetail(t, editMrNo)
@@ -99,11 +92,6 @@ const MaterialRequest1 = props => {
         getMaterialRequestJobDetails(t),
       ]);
 
-      console.log('[MR1] genRes:', JSON.stringify(genRes, null, 2));
-      console.log('[MR1] divRes count:', (divRes?.data ?? divRes ?? []).length);
-      console.log('[MR1] vehRes count:', (vehRes?.data ?? vehRes ?? []).length);
-      console.log('[MR1] jobRes count:', (jobRes?.data ?? jobRes ?? []).length);
-
       const divList = divRes?.data ?? divRes ?? [];
       const vehList = vehRes?.data ?? vehRes ?? [];
       setDivisions(divList);
@@ -112,10 +100,6 @@ const MaterialRequest1 = props => {
 
       if (isEditMode) {
         const d = genRes?.data ?? {};
-        console.log(
-          '[MR1] EDIT — raw detail data:',
-          JSON.stringify(d, null, 2),
-        );
 
         setMrNo(d.MRNO ?? editMrNo);
         setMrDate(d.MRDATE ?? '');
@@ -124,59 +108,27 @@ const MaterialRequest1 = props => {
         const vehFound = vehList.find(v => v?.VehName === d.VEHNO);
         setVehNo(d.VEHNO ?? '');
         setVehDesc(vehFound?.CC ?? '');
-        console.log(
-          '[MR1] EDIT — set: mrNo=%s mrDate=%s priority=%s jobRefNo=%s vehNo=%s vehDesc=%s',
-          d.MRNO,
-          d.MRDATE,
-          d.PRIORITY,
-          d.JOBREFNO,
-          d.VEHNO,
-          vehFound?.CC,
-        );
 
         if (d.DIVISION) {
-          console.log(
-            '[MR1] EDIT — fetching departments for division:',
-            d.DIVISION,
-          );
           setDivision(d.DIVISION);
           const deptRes = await getMaterialRequestDepartments(t, d.DIVISION);
           const deptList = deptRes?.data ?? deptRes ?? [];
-          console.log('[MR1] EDIT — deptList count:', deptList.length);
           setDepartments(deptList);
 
           if (d.DEPT) {
-            console.log('[MR1] EDIT — fetching plants for dept:', d.DEPT);
             setDept(d.DEPT);
             const plantRes = await getMaterialRequestPlants(t, d.DEPT);
             const plantList = plantRes?.data ?? plantRes ?? [];
-            console.log('[MR1] EDIT — plantList count:', plantList.length);
             setPlants(plantList);
 
             if (d.PLANT) {
-              console.log(
-                '[MR1] EDIT — fetching equipments for plant:',
-                d.PLANT,
-              );
               setPlant(d.PLANT);
               const eqpRes = await getMaterialRequestEquipments(t, d.PLANT);
               const eqpList = eqpRes?.data ?? eqpRes ?? [];
-              console.log('[MR1] EDIT — eqpList count:', eqpList.length);
               setEquipments(eqpList);
               setEqp(d.EQPART ?? '');
-              console.log('[MR1] EDIT — set eqp:', d.EQPART);
-            } else {
-              console.log(
-                '[MR1] EDIT — no PLANT in detail, skipping equipments',
-              );
             }
-          } else {
-            console.log(
-              '[MR1] EDIT — no DEPT in detail, skipping plants/equipments',
-            );
           }
-        } else {
-          console.log('[MR1] EDIT — no DIVISION in detail, skipping cascade');
         }
       } else {
         const mrNoVal = genRes?.data?.MRNO ?? genRes?.MRNO ?? '';
@@ -184,19 +136,10 @@ const MaterialRequest1 = props => {
           genRes?.data?.MRDATE ??
           genRes?.MRDATE ??
           moment().format('DD/MM/YYYY');
-        console.log(
-          '[MR1] NEW — generated mrNo:',
-          mrNoVal,
-          'mrDate:',
-          mrDateVal,
-        );
         setMrNo(mrNoVal);
         setMrDate(mrDateVal);
       }
-
-      console.log('[MR1] loadInitialData complete');
     } catch (e) {
-      console.error('[MR1] loadInitialData ERROR:', e?.message ?? e);
       Alert.alert('Error', 'Failed to load form data.');
     } finally {
       setLoading(false);
@@ -204,7 +147,6 @@ const MaterialRequest1 = props => {
   };
 
   const onSelectDivision = async val => {
-    console.log('[MR1] onSelectDivision:', val);
     setDivision(val);
     setDept('');
     setPlant('');
@@ -215,16 +157,11 @@ const MaterialRequest1 = props => {
     setActiveModal(null);
     try {
       const res = await getMaterialRequestDepartments(token, val);
-      const list = res?.data ?? res ?? [];
-      console.log('[MR1] departments loaded:', list.length);
-      setDepartments(list);
-    } catch (e) {
-      console.error('[MR1] onSelectDivision ERROR:', e?.message);
-    }
+      setDepartments(res?.data ?? res ?? []);
+    } catch (e) {}
   };
 
   const onSelectDept = async val => {
-    console.log('[MR1] onSelectDept:', val);
     setDept(val);
     setPlant('');
     setEqp('');
@@ -233,28 +170,19 @@ const MaterialRequest1 = props => {
     setActiveModal(null);
     try {
       const res = await getMaterialRequestPlants(token, val);
-      const list = res?.data ?? res ?? [];
-      console.log('[MR1] plants loaded:', list.length);
-      setPlants(list);
-    } catch (e) {
-      console.error('[MR1] onSelectDept ERROR:', e?.message);
-    }
+      setPlants(res?.data ?? res ?? []);
+    } catch (e) {}
   };
 
   const onSelectPlant = async val => {
-    console.log('[MR1] onSelectPlant:', val);
     setPlant(val);
     setEqp('');
     setEquipments([]);
     setActiveModal(null);
     try {
       const res = await getMaterialRequestEquipments(token, val);
-      const list = res?.data ?? res ?? [];
-      console.log('[MR1] equipments loaded:', list.length);
-      setEquipments(list);
-    } catch (e) {
-      console.error('[MR1] onSelectPlant ERROR:', e?.message);
-    }
+      setEquipments(res?.data ?? res ?? []);
+    } catch (e) {}
   };
 
   const handleBack = () => {
@@ -311,11 +239,7 @@ const MaterialRequest1 = props => {
       jobRefNo,
       isEditMode,
     };
-    console.log(
-      '[MR1] handleNext → navigating to MR2 with:',
-      JSON.stringify(payload, null, 2),
-    );
-    props.navigation.navigate('MaterialRequest2', payload);
+    props.navigation.navigate('MaterialRequestItems', payload);
   };
 
   const renderModal = (items, selectedVal, onSelect, keyExtractor) => (
@@ -591,4 +515,4 @@ const styles = StyleSheet.create({
   submitText: { color: 'white', fontWeight: '700', fontSize: 15 },
 });
 
-export default MaterialRequest1;
+export default MaterialRequestForm;

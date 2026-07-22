@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,7 +12,7 @@ import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer'
 import {
   getMaterialRequestDetail,
   getMaterialRequestAttachments,
-} from '../../../utility/ApiHelpers/StagingApis';
+} from '../../../utility/ApiHelpers/MaterialRequestApi';
 import {
   BlackColor,
   darkGreyTextColor,
@@ -20,10 +20,10 @@ import {
   primaryColor,
   whiteColor,
 } from '../../../utility/colors';
-import {fonts} from '../../../utility/GlobalStyles';
+import { fonts } from '../../../utility/GlobalStyles';
 
 // ─── Detail View ─────────────────────────────────────────────────────────────
-const Row = ({label, value}) =>
+const Row = ({ label, value }) =>
   value != null && value !== '' ? (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -31,7 +31,7 @@ const Row = ({label, value}) =>
     </View>
   ) : null;
 
-const DetailView = ({data}) => {
+const DetailView = ({ data }) => {
   if (!data) return null;
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -67,7 +67,7 @@ const DetailView = ({data}) => {
 };
 
 // ─── Attachments View ─────────────────────────────────────────────────────────
-const AttachmentsView = ({data}) => {
+const AttachmentsView = ({ data }) => {
   if (!data?.length) {
     return (
       <View style={styles.empty}>
@@ -79,7 +79,7 @@ const AttachmentsView = ({data}) => {
     <ScrollView contentContainerStyle={styles.content}>
       {data.map((att, i) => (
         <View key={i} style={styles.attachCard}>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.attachName} numberOfLines={1}>
               {att.ATTACHNAME}
             </Text>
@@ -90,7 +90,7 @@ const AttachmentsView = ({data}) => {
                 : ''}
             </Text>
             {att.ATTACHFILE && (
-              <View style={{marginTop: 8}}>
+              <View style={{ marginTop: 8 }}>
                 <AttachmentImageViewer attachment={att} />
               </View>
             )}
@@ -103,7 +103,7 @@ const AttachmentsView = ({data}) => {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const MRDetailScreen = props => {
-  const {mrNo, type} = props.route?.params ?? {};
+  const { mrNo, type } = props.route?.params ?? {};
   const isDetail = type === 'detail';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -114,11 +114,19 @@ const MRDetailScreen = props => {
     const load = async () => {
       try {
         const token = await AsyncStorage.getItem('access_token');
-        console.log('[MRDetailScreen] fetching', isDetail ? 'detail' : 'attachments', 'for mrNo =', mrNo);
+        console.log(
+          '[MRDetailScreen] fetching',
+          isDetail ? 'detail' : 'attachments',
+          'for mrNo =',
+          mrNo,
+        );
         const res = isDetail
           ? await getMaterialRequestDetail(token, mrNo)
           : await getMaterialRequestAttachments(token, mrNo);
-        console.log('[MRDetailScreen] API response =', JSON.stringify(res, null, 2));
+        console.log(
+          '[MRDetailScreen] API response =',
+          JSON.stringify(res, null, 2),
+        );
         setData(isDetail ? res.data : res.data ?? []);
       } catch (e) {
         console.error('[MRDetailScreen] error =', e.message);
@@ -138,7 +146,11 @@ const MRDetailScreen = props => {
         onBackPress={() => props.navigation.goBack()}
       />
       {loading ? (
-        <ActivityIndicator style={styles.loader} size="large" color={primaryColor} />
+        <ActivityIndicator
+          style={styles.loader}
+          size="large"
+          color={primaryColor}
+        />
       ) : error ? (
         <View style={styles.empty}>
           <Text style={styles.errorText}>{error}</Text>
@@ -153,9 +165,9 @@ const MRDetailScreen = props => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f5f5f5'},
-  loader: {flex: 1, justifyContent: 'center'},
-  content: {padding: 14, paddingBottom: 30},
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  loader: { flex: 1, justifyContent: 'center' },
+  content: { padding: 14, paddingBottom: 30 },
   card: {
     backgroundColor: whiteColor,
     borderRadius: 8,
@@ -212,9 +224,14 @@ const styles = StyleSheet.create({
     color: lightGreyTextColor,
     marginTop: 2,
   },
-  empty: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  emptyText: {color: lightGreyTextColor, fontFamily: fonts.Lato_Regular},
-  errorText: {color: '#cc0000', fontFamily: fonts.Lato_Regular, textAlign: 'center', padding: 20},
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
+  errorText: {
+    color: '#cc0000',
+    fontFamily: fonts.Lato_Regular,
+    textAlign: 'center',
+    padding: 20,
+  },
 });
 
 export default MRDetailScreen;

@@ -17,16 +17,15 @@ import {
   errorCodes,
 } from '@react-native-documents/picker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import RNBlobUtil from 'react-native-blob-util';
 import { BlackColor, primaryColor } from '../../../utility/colors';
 import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
 import HeaderComponent from '../../CommonComponents/Header';
 import {
-  mainUrl,
   submitMaterialRequest,
   updateMaterialRequest,
   getMaterialRequestAttachments,
-} from '../../../utility/ApiHelpers/StagingApis';
+  uploadMaterialRequestAttachment,
+} from '../../../utility/ApiHelpers/MaterialRequestApi';
 
 const ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx', 'xls'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -70,63 +69,8 @@ const MaterialRequestAttachment = props => {
     }
   };
 
-  const getMimeType = file => {
-    if (file.type && file.type !== 'application/octet-stream') return file.type;
-    const ext = file.name?.split('.').pop()?.toLowerCase();
-    const map = {
-      pdf: 'application/pdf',
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      xls: 'application/vnd.ms-excel',
-    };
-    return map[ext] ?? 'application/octet-stream';
-  };
-
-  const uploadAttachment = async (file, token) => {
-    const url = `${mainUrl}api/material-request/${mrNo}/attachments`;
-    const mimeType = getMimeType(file);
-    const fileUri = file.uri.startsWith('file://')
-      ? file.uri
-      : `file://${file.uri}`;
-
-    console.log('[uploadAttachment] START', {
-      url,
-      fileName: file.name,
-      fileUri,
-      mimeType,
-      fileSize: file.size,
-    });
-
-    const res = await RNBlobUtil.fetch(
-      'POST',
-      url,
-      { Authorization: 'Bearer ' + token },
-      [
-        {
-          name: 'attachment',
-          filename: file.name,
-          type: mimeType,
-          data: RNBlobUtil.wrap(fileUri.replace('file://', '')),
-        },
-      ],
-    );
-
-    const status = res.respInfo.status;
-    const body = res.data;
-    console.log('[uploadAttachment] RESPONSE', {
-      fileName: file.name,
-      status,
-      body,
-    });
-
-    if (status !== 200 && status !== 201) {
-      throw new Error(`Upload failed for ${file.name}: ${status} ${body}`);
-    }
-    return true;
-  };
+  const uploadAttachment = (file, token) =>
+    uploadMaterialRequestAttachment(token, mrNo, file);
 
   const validateAndAdd = file => {
     const ext = file.name?.split('.').pop()?.toLowerCase();

@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { searchIcon } from '../../../Images';
-import { getMaterialRequestStocks } from '../../../utility/ApiHelpers/StagingApis';
+import { getMaterialRequestStocks } from '../../../utility/ApiHelpers/MaterialRequestApi';
 import { BlackColor, primaryColor } from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
 
-const MaterialRequest3 = props => {
+const MaterialRequestStockPicker = props => {
   const [stockCode, setStockCode] = useState('');
   const [stockName, setStockName] = useState('');
   const [stocks, setStocks] = useState([]);
@@ -36,7 +36,6 @@ const MaterialRequest3 = props => {
       const list = res?.data?.data ?? res?.data ?? res?.stocks ?? res ?? [];
       setStocks(Array.isArray(list) ? list : []);
     } catch (e) {
-      console.error('stocks error', e);
     } finally {
       setLoading(false);
     }
@@ -152,4 +151,4 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', marginTop: 40, color: '#aaa', fontSize: 14 },
 });
 
-export default MaterialRequest3;
+export default MaterialRequestStockPicker;

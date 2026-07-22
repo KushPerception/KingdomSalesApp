@@ -109,3 +109,55 @@ and Quotation list components that both screens render.
   - Verified via `eslint` (clean) and a direct `@babel/core` compile with the
     project's `@react-native/babel-preset` (all three files parse); no
     on-device verification was performed for this follow-up pass.
+
+## Status: Material Request restructure (same pattern, follow-up pass) ✅
+
+Applied the same restructure pattern to `Screens/MainComponents/MaterialRequest/`.
+Unlike the Purchase Manager case, the API calls here weren't inlined in
+components — they already lived in `StagingApis.js` as ~14 loosely-related
+functions. So this pass *moved* them out rather than writing new ones:
+
+- **New `utility/ApiHelpers/MaterialRequestApi.js`** — all
+  `getMaterialRequest*`/`submitMaterialRequest`/`updateMaterialRequest`
+  functions moved out of `StagingApis.js` (which shrank accordingly),
+  console.log/console.error debug noise stripped.
+  - `getMaterialRequestList` was the worst offender in either restructure —
+    it took `setList`/`setPage`/`setFooterLoading`/`setNoMorePage`/`setLoading`
+    React state setters as parameters, coupling the API layer directly to one
+    component's state shape. Redesigned as `fetchMaterialRequestList(userToken,
+    filters, page)` → `{items, lastPage}`, matching `fetchPurchaseOrderList`'s
+    contract so `MaterialRequestList.js` could adopt `usePaginatedList`.
+  - Added `uploadMaterialRequestAttachment(userToken, mrNo, file)`, extracting
+    the inline `RNBlobUtil.fetch` multipart upload + MIME-type lookup that
+    previously lived in `MaterialRequestAttachment.js`.
+  - Incidental fix: `MRDetailScreen.js` (the orphaned/unregistered screen
+    noted above) imported two of the moved functions from `StagingApis.js` —
+    repointed to `MaterialRequestApi.js` so it doesn't silently break; its
+    logic was not otherwise touched.
+- **`MaterialRequestList.js`** — adopted `usePaginatedList`, same shape as
+  `PurchaseOrderList.js`. Preserved one pre-existing quirk as-is: changing
+  `fromDate`/`toDate` alone doesn't trigger a refetch, only the debounced
+  `[keyword, searchBy]` effect does — not fixed in this pass, worth a look
+  separately.
+- **Renamed the numbered screens** to describe what each step does — this
+  also meant updating the React Navigation route names (`Stack.Screen name=`)
+  and every `navigate()` call site referencing them by string, a bigger
+  blast radius than the `PurchaseOrderSceen.js` typo fix, done with explicit
+  confirmation:
+  - `MaterialRequest1.js` → `MaterialRequestForm.js` (route
+    `"MaterialRequestForm"`) — division/dept/plant/equipment/vehicle/priority form.
+  - `MaterialRequest2.js` → `MaterialRequestItems.js` (route
+    `"MaterialRequestItems"`) — stock item qty/remarks entry.
+  - `MaterialRequest3.js` → `MaterialRequestStockPicker.js` (route
+    `"MaterialRequestStockPicker"`) — stock search/picker.
+  - `MaterialRequestAttachment.js` and `MaterialRequestList.js` kept their
+    names (already descriptive).
+- Stripped debug `console.log`/`console.error` noise throughout all 5 screens
+  (kept the user-facing `Alert.alert` error handling as-is).
+- Verified via `eslint` (only pre-existing warnings/errors remain, confirmed
+  identical against the pre-change files) and a direct `@babel/core` compile
+  with `@react-native/babel-preset` (all changed files parse); no on-device
+  verification was performed for this pass — before merging, manually
+  exercise: MR list load/search/date-range/load-more, new MR create flow
+  (form → items → stock picker → attachments → submit), edit MR flow, and
+  attachment upload/failure paths.

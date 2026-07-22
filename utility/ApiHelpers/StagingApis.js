@@ -1,17 +1,17 @@
-import moment from "moment";
-import { Alert } from "react-native";
-import { deleteSyncedSettledDriverOrder } from "../../Screens/db/driverOrders/crud";
+import moment from 'moment';
+import { Alert } from 'react-native';
+import { deleteSyncedSettledDriverOrder } from '../../Screens/db/driverOrders/crud';
 
 // Staging url 15-jul-2024
-export const mainUrl = "https://kingdom.thatsmytask.com/";
+export const mainUrl = 'https://kingdom.thatsmytask.com/';
 
 // production url 15-jul-2024
 // export const mainUrl = "https://app.kingdom.bh:8443/";
 
 const StagApiUrl = `${mainUrl}api`;
 export const SignatureUrl = `${mainUrl}delivery-notes/`;
-const countryCode = "+973";
-const version = "/v2";
+const countryCode = '+973';
+const version = '/v2';
 export const whatsappURL = `https://api.whatsapp.com/send?phone=${countryCode}`;
 
 //Order V2
@@ -22,30 +22,30 @@ export const UpdateZeroVat = (
   ZEROVAT,
   SLNO,
   UserToken,
-  CallBack
+  CallBack,
 ) => {
   fetch(`${StagApiUrl}/v2/order/${SLNO}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify({
       ZEROVAT: ZEROVAT,
       NOTRANSPORT: NOTRANSPORT,
     }),
   })
-    .then((response) => {
+    .then(response => {
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack();
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -54,24 +54,24 @@ export const UpdateZeroVat = (
 
 export const SubmitOrder = (SLNO, UserToken, CallBack) => {
   fetch(`${StagApiUrl}/v2/order/${SLNO}/complete`, {
-    method: "PATCH",
+    method: 'PATCH',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response.status === 200 || response.status === 422) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack({ ...responseJson, status: response.status });
           // CallBack(responseJson)
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -80,22 +80,22 @@ export const SubmitOrder = (SLNO, UserToken, CallBack) => {
 
 export const DeleteOrderToServer = (orderNo, UserToken, SuccessCallback) => {
   fetch(`${StagApiUrl}/v2/order/${orderNo}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           SuccessCallback();
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -110,28 +110,28 @@ export const GetSalesOrderItemReceipt = (
   Division,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   fetch(
     `${StagApiUrl}/v2/orders/${OrderType}/${OrderId}/receipt/${ItemId}?ERPOrderNo=${ERPOrderNo}&Division=${Division}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -146,28 +146,28 @@ export const GetSalesOrderItemInvoice = (
   InvoiceNo,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   const url = `${StagApiUrl}/v2/invoices/${InvoiceNo}/details?division=${Division}`;
   // const url = `${StagApiUrl}/v2/orders/${OrderType}/${OrderId}/invoice/${ItemId}?ERPOrderNo=${ERPOrderNo}&Division=${Division}&InvoiceNo=${InvoiceNo}`;
   console.log({ url });
   fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -180,25 +180,25 @@ export const GetSalesReceiptPdf = (
   OrderType,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   fetch(`${StagApiUrl}/v2/orders/${OrderType}/${OrderId}/receipt`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -209,24 +209,24 @@ export const GetSalesReceiptPdf = (
 export const GetAllOrdersFromServer = (OrderObject, CallBack, setloading) => {
   console.log(`${StagApiUrl}/v2/order/list?page=` + OrderObject?.page);
   fetch(`${StagApiUrl}/v2/order/list?page=` + OrderObject?.page, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + OrderObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + OrderObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
         //Alert.alert("Something went wrong.");
-        console.log("Sales person order response", response.status);
+        console.log('Sales person order response', response.status);
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -239,27 +239,27 @@ export const UpdateItemToOrder = (
   itemNo,
   UserToken,
   UpdateObject,
-  SuccessCallback
+  SuccessCallback,
 ) => {
   fetch(`${StagApiUrl}/v2/order/${orderNo}/item/${itemNo}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify(UpdateObject),
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.text().then((responseJson) => {
+        response.text().then(responseJson => {
           SuccessCallback();
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -271,25 +271,25 @@ export const DeleteItemFromOrder = (
   itemNo,
   remark,
   UserToken,
-  SuccessCallback
+  SuccessCallback,
 ) => {
   fetch(`${StagApiUrl}/v2/order/${orderNo}/item/${itemNo}?remark=${remark}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           SuccessCallback();
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -301,29 +301,29 @@ export const AddNewItemToOrder = (
   ItemObject,
   UserToken,
   SuccessCallback,
-  setLoaderFalse
+  setLoaderFalse,
 ) => {
   fetch(`${StagApiUrl}/v2/order/${orderNo}/item`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify(ItemObject),
   })
-    .then((response) => {
+    .then(response => {
       setLoaderFalse();
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           SuccessCallback();
           // CallBack(responseJson)
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -332,23 +332,23 @@ export const AddNewItemToOrder = (
 
 export const GetOrderDetailFromServer = (UserToken, orderNo, CallBack) => {
   fetch(`${StagApiUrl}/v2/order/${orderNo}`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -358,33 +358,33 @@ export const SendCustomerDetailtToServer = (
   CustomerDetailObject,
   UserToken,
   NextPage,
-  setLoading
+  setLoading,
 ) => {
   fetch(`${StagApiUrl}/v2/order`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify(CustomerDetailObject),
   })
-    .then((response) => {
+    .then(response => {
       setLoading(false);
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           NextPage(
             responseJson.data.SLNO,
             responseJson?.data?.ZEROVAT,
-            CustomerDetailObject.NOTRANSPORT
+            CustomerDetailObject.NOTRANSPORT,
           );
           // CallBack(responseJson)
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -394,24 +394,24 @@ export const SendCustomerDetailtToServer = (
 //Login User
 export const loginUser = (UserObject, CallBack, setloading) => {
   let formdata = new FormData();
-  formdata.append("username", UserObject?.UserName);
-  formdata.append("password", UserObject?.Password);
+  formdata.append('username', UserObject?.UserName);
+  formdata.append('password', UserObject?.Password);
 
   fetch(`${StagApiUrl}/login`, {
-    method: "POST",
+    method: 'POST',
 
     body: formdata,
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -421,23 +421,23 @@ export const loginUser = (UserObject, CallBack, setloading) => {
 
 export const logoutUser = (UserToken, CallBack) => {
   fetch(`${StagApiUrl}/logout`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -449,24 +449,24 @@ export const GetCustomersByOrderType = (OrderObject, CallBack, setloading) => {
     `${StagApiUrl}/customer?customer_type=${OrderObject?.OrderType}&keyword=` +
       OrderObject?.CustomerName,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + OrderObject?.UserToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + OrderObject?.UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -475,46 +475,46 @@ export const GetCustomersByOrderType = (OrderObject, CallBack, setloading) => {
 export const GetCustomersWithPagination = (
   CustomerObject,
   CallBack,
-  setloading
+  setloading,
 ) => {
-  console.log("Token", CustomerObject?.UserToken);
+  console.log('Token', CustomerObject?.UserToken);
 
   console.log(
     `${StagApiUrl}/customer/list?customer_type=` +
       CustomerObject?.OrderType +
-      "&page=" +
+      '&page=' +
       CustomerObject?.Page +
-      "&keyword=" +
-      CustomerObject?.CustomerName
+      '&keyword=' +
+      CustomerObject?.CustomerName,
   );
 
   fetch(
     `${StagApiUrl}/customer/list?customer_type=` +
       CustomerObject?.OrderType +
-      "&page=" +
+      '&page=' +
       CustomerObject?.Page +
-      "&keyword=" +
+      '&keyword=' +
       CustomerObject?.CustomerName,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + CustomerObject?.UserToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + CustomerObject?.UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson, CustomerObject?.SearchList);
         });
       } else {
-        console.log("Customer list response", response.status);
+        console.log('Customer list response', response.status);
         //  Alert.alert("Something went wrong.");
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -524,24 +524,24 @@ export const GetCustomersWithPagination = (
 
 export const GetAllOrders = (UserToken, CallBack, setloading) => {
   fetch(`${StagApiUrl}/order`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
-      console.log("Api response", response, response.status);
+    .then(response => {
+      console.log('Api response', response, response.status);
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -550,24 +550,24 @@ export const GetAllOrders = (UserToken, CallBack, setloading) => {
 export const GetAllOrdersPagination = (OrderObject, CallBack, setloading) => {
   console.log(`${StagApiUrl}/order/list?page=` + OrderObject?.page);
   fetch(`${StagApiUrl}/order/list?page=` + OrderObject?.page, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + OrderObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + OrderObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
         //Alert.alert("Something went wrong.");
-        console.log("Sales person order response", response.status);
+        console.log('Sales person order response', response.status);
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -577,25 +577,25 @@ export const GetAllOrdersPagination = (OrderObject, CallBack, setloading) => {
 
 export const CreateSendOrders = (SendOrderObject, UserToken, NavigateHome) => {
   fetch(`${StagApiUrl}/order`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify(SendOrderObject),
   })
-    .then((response) => {
+    .then(response => {
       if (response.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           NavigateHome();
           // CallBack(responseJson)
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -604,24 +604,24 @@ export const CreateSendOrders = (SendOrderObject, UserToken, NavigateHome) => {
 
 export const UpdateOrders = (SendOrderObject, CallBack, UserToken) => {
   fetch(`${StagApiUrl}/order/` + SendOrderObject.ORDERID, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
     body: JSON.stringify(SendOrderObject),
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.text().then((responseJson) => {
+        response.text().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -632,30 +632,30 @@ export const DeleteOrder = (
   OrderId,
   DeleteRemark,
   UserToken,
-  GetDataCallFunc
+  GetDataCallFunc,
 ) => {
-  console.log(`${StagApiUrl}/order/` + OrderId + "?remark=" + DeleteRemark);
-  fetch(`${StagApiUrl}/order/` + OrderId + "?remark=" + DeleteRemark, {
-    method: "DELETE",
+  console.log(`${StagApiUrl}/order/` + OrderId + '?remark=' + DeleteRemark);
+  fetch(`${StagApiUrl}/order/` + OrderId + '?remark=' + DeleteRemark, {
+    method: 'DELETE',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.text().then((responseJson) => {
-          console.log("Delete order response", responseJson);
+        response.text().then(responseJson => {
+          console.log('Delete order response', responseJson);
           GetDataCallFunc();
         });
       } else {
-        response.json().then((responseJson) => {
-          console.log("Delete order error response", responseJson);
+        response.json().then(responseJson => {
+          console.log('Delete order error response', responseJson);
           Alert.alert(responseJson?.message);
         });
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -664,23 +664,23 @@ export const DeleteOrder = (
 
 export const GetAllSites = (UserToken, SiteName, CallBack, setloading) => {
   fetch(`${StagApiUrl}/site?keyword=` + SiteName, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -690,42 +690,42 @@ export const GetSitesPagination = (SiteObject, CallBack, setloading) => {
   let url =
     `${StagApiUrl}/site/list?keyword=` +
     SiteObject?.SiteName +
-    "&page=" +
+    '&page=' +
     SiteObject?.Page;
 
   if (SiteObject?.orderType && SiteObject?.customerCode) {
     url =
       `${StagApiUrl}/site/list?keyword=` +
       SiteObject?.SiteName +
-      "&page=" +
+      '&page=' +
       SiteObject?.Page +
-      "&division=" +
+      '&division=' +
       SiteObject?.orderType +
-      "&custCode=" +
+      '&custCode=' +
       SiteObject?.customerCode;
   }
 
   console.log(url);
 
   fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + SiteObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + SiteObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson, SiteObject?.SearchList);
         });
       } else {
-        console.log("Get Customer Site response", response.status);
+        console.log('Get Customer Site response', response.status);
         // Alert.alert("Something went wrong.");
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -744,23 +744,23 @@ export const getSiteList = async (
   setPage,
   setLoading,
   setFooterLoading,
-  setNoMorePage
+  setNoMorePage,
 ) => {
   setFooterLoading && setFooterLoading(true);
   setLoading && setLoading(true);
   const url = `${StagApiUrl}/site/list?keyword=${keyword}&page=${page}${
-    searchList ? `&searchList=true` : ""
-  }${customerCode ? `&custCode=${customerCode}` : ""}${
-    division ? `&division=${division}` : ""
+    searchList ? `&searchList=true` : ''
+  }${customerCode ? `&custCode=${customerCode}` : ''}${
+    division ? `&division=${division}` : ''
   }`;
   console.log({ url });
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
     });
 
@@ -780,7 +780,7 @@ export const getSiteList = async (
         setSiteList(
           siteList.length > 0
             ? [...siteList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(true);
       } else {
@@ -789,14 +789,14 @@ export const getSiteList = async (
         setSiteList(
           siteList.length > 0
             ? [...siteList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(false);
       }
     } else {
       setLoading && setLoading(false);
       setFooterLoading && setFooterLoading(false);
-      throw new Error("Something went wrong.");
+      throw new Error('Something went wrong.');
     }
   } catch (error) {
     console.error(error);
@@ -817,21 +817,21 @@ export const getCustomerList = async (
   setPage,
   setLoading,
   setFooterLoading,
-  setNoMorePage
+  setNoMorePage,
 ) => {
   setFooterLoading && setFooterLoading(true);
   setLoading && setLoading(true);
   const url = `${StagApiUrl}/customer/list?${
-    orderType !== "" ? `customer_type=${orderType}` : ""
-  }&page=${page}&keyword=${keyword}${searchList ? `&searchList=true` : ""}`;
+    orderType !== '' ? `customer_type=${orderType}` : ''
+  }&page=${page}&keyword=${keyword}${searchList ? `&searchList=true` : ''}`;
   console.log({ url });
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
     });
 
@@ -840,7 +840,7 @@ export const getCustomerList = async (
       setLoading && setLoading(false);
       const responseJson = await response.json();
       const lastPage = responseJson.pagination?.last_page;
-      console.log("getCustomerList", {
+      console.log('getCustomerList', {
         page,
         last_page: responseJson.pagination,
         length: responseJson.data.length,
@@ -851,7 +851,7 @@ export const getCustomerList = async (
         setCustomerList(
           customerList.length > 0
             ? [...customerList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(true);
       } else {
@@ -860,14 +860,14 @@ export const getCustomerList = async (
         setCustomerList(
           customerList.length > 0
             ? [...customerList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(false);
       }
     } else {
       setLoading && setLoading(false);
       setFooterLoading && setFooterLoading(false);
-      throw new Error("Something went wrong.");
+      throw new Error('Something went wrong.');
     }
   } catch (error) {
     console.error(error);
@@ -879,23 +879,23 @@ export const getCustomerList = async (
 // Division List
 export const GetAllDivisions = (DivisionObject, CallBack) => {
   fetch(`${StagApiUrl}/getdivision`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + DivisionObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + DivisionObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -904,76 +904,76 @@ export const GetAllDivisions = (DivisionObject, CallBack) => {
 
 export const GetAllStocks = (StockObject, CallBack) => {
   fetch(`${StagApiUrl}/stock`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + StockObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + StockObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson, StockObject?.Division);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
 
 export const GetStocksByDivision = (StockObject, CallBack, setloading) => {
   console.log(
-    "Stock Url",
+    'Stock Url',
     `${StagApiUrl}/stock/` +
       StockObject?.Division +
-      "?keyword=" +
+      '?keyword=' +
       encodeURIComponent(StockObject?.StockName) +
-      "&page=" +
+      '&page=' +
       StockObject?.Page +
-      "&orderType=" +
+      '&orderType=' +
       StockObject?.OrderType +
-      "&custName=" +
+      '&custName=' +
       encodeURIComponent(StockObject?.CustomerName) +
-      "&site=" +
-      encodeURIComponent(StockObject?.SiteName)
+      '&site=' +
+      encodeURIComponent(StockObject?.SiteName),
   );
   fetch(
     `${StagApiUrl}/stock/` +
       StockObject?.Division +
-      "?keyword=" +
+      '?keyword=' +
       encodeURIComponent(StockObject?.StockName) +
-      "&page=" +
+      '&page=' +
       StockObject?.Page +
-      "&orderType=" +
+      '&orderType=' +
       StockObject?.OrderType +
-      "&custName=" +
+      '&custName=' +
       encodeURIComponent(StockObject?.CustomerName) +
-      "&site=" +
+      '&site=' +
       encodeURIComponent(StockObject?.SiteName),
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + StockObject?.UserToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + StockObject?.UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson, StockObject?.SearchList);
         });
       } else {
-        console.log("Stock list", response.status);
+        console.log('Stock list', response.status);
         //Alert.alert("Something went wrong.");
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -982,28 +982,28 @@ export const GetStocksByDivision = (StockObject, CallBack, setloading) => {
 //Validate Customer
 
 export const ValidateCustomers = (CustomerObject, CallBack) => {
-  let CustCodeWithoutComma = (CustomerObject?.CustomerCode).replace(",", "");
+  let CustCodeWithoutComma = (CustomerObject?.CustomerCode).replace(',', '');
   fetch(
     `${StagApiUrl}/customer/validate?customer_code=${CustCodeWithoutComma}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + CustomerObject?.UserToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + CustomerObject?.UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -1012,23 +1012,23 @@ export const ValidateCustomers = (CustomerObject, CallBack) => {
 
 export const GetAllDriverOrders = (UserToken, CallBack, setloading) => {
   fetch(`${StagApiUrl}/delivery/orders`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1039,35 +1039,35 @@ export const GetDriverOrdersPagination = (
   OrderObject,
   CallBack,
   setloading,
-  source
+  source,
 ) => {
   setloading(true);
   console.log(
-    `${StagApiUrl}${version}/delivery/orders/list?page=${OrderObject?.page}&source=${source}`
+    `${StagApiUrl}${version}/delivery/orders/list?page=${OrderObject?.page}&source=${source}`,
   );
   fetch(
     `${StagApiUrl}${version}/delivery/orders/list?page=${OrderObject?.page}&source=${source}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + OrderObject?.UserToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + OrderObject?.UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
-          console.log("GetDriverOrdersPagination", response.status);
+        response.json().then(responseJson => {
+          console.log('GetDriverOrdersPagination', response.status);
           CallBack(responseJson);
         });
       } else {
         //Alert.alert("Something went wrong.");
-        console.log("Driver order listing", response.status);
+        console.log('Driver order listing', response.status);
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1078,55 +1078,55 @@ export const SendOrderSignature = (
   CallBack,
   setloading,
   setSignaturePresent,
-  setEmptySignatureError
+  setEmptySignatureError,
 ) => {
   setloading(true);
-  console.log("SendOrderObject?.UserToken", SendOrderObject?.UserToken);
+  console.log('SendOrderObject?.UserToken', SendOrderObject?.UserToken);
   let formdata = new FormData();
-  formdata.append("signature", SendOrderObject?.Signature);
-  formdata.append("customer_email_1", SendOrderObject?.UserEmail);
-  formdata.append("customer_email_2", SendOrderObject?.UserEmail2);
-  formdata.append("customer_email_3", SendOrderObject?.UserEmail3);
-  formdata.append("SignatureRemarks", SendOrderObject?.SignatureRemarks);
-  formdata.append("customer_mobile", SendOrderObject?.CustomerPhone);
-  console.log("formdata", formdata);
+  formdata.append('signature', SendOrderObject?.Signature);
+  formdata.append('customer_email_1', SendOrderObject?.UserEmail);
+  formdata.append('customer_email_2', SendOrderObject?.UserEmail2);
+  formdata.append('customer_email_3', SendOrderObject?.UserEmail3);
+  formdata.append('SignatureRemarks', SendOrderObject?.SignatureRemarks);
+  formdata.append('customer_mobile', SendOrderObject?.CustomerPhone);
+  console.log('formdata', formdata);
   console.log(
-    "url",
-    `${StagApiUrl}/delivery/${SendOrderObject?.Division}/order/${SendOrderObject?.DeliveryNo}`
+    'url',
+    `${StagApiUrl}/delivery/${SendOrderObject?.Division}/order/${SendOrderObject?.DeliveryNo}`,
   );
   fetch(
     `${StagApiUrl}/delivery/${SendOrderObject?.Division}/order/${SendOrderObject?.DeliveryNo}`,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + SendOrderObject?.UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + SendOrderObject?.UserToken,
       },
       body: formdata,
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       console.log(
-        "failed signature response",
+        'failed signature response',
         response.status,
-        JSON.stringify(response)
+        JSON.stringify(response),
       );
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(setSignaturePresent, setEmptySignatureError, responseJson);
         });
       } else {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           console.log(
-            "failed signature",
+            'failed signature',
             response.status,
-            JSON.stringify(responseJson)
+            JSON.stringify(responseJson),
           );
         });
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1135,46 +1135,46 @@ export const SendOrderSignature = (
 export const SyncSendOrderSignature = (
   SendOrderObject,
   setSuccessErrorModal,
-  setModalText
+  setModalText,
 ) => {
   let formdata = new FormData();
-  formdata.append("signature", SendOrderObject?.Signature);
-  formdata.append("customer_email_1", SendOrderObject?.UserEmail);
-  formdata.append("customer_email_2", SendOrderObject?.UserEmail2);
-  formdata.append("customer_email_3", SendOrderObject?.UserEmail3);
-  formdata.append("SignatureRemarks", SendOrderObject?.SignatureRemarks);
-  formdata.append("customer_mobile", SendOrderObject?.CustomerPhone);
+  formdata.append('signature', SendOrderObject?.Signature);
+  formdata.append('customer_email_1', SendOrderObject?.UserEmail);
+  formdata.append('customer_email_2', SendOrderObject?.UserEmail2);
+  formdata.append('customer_email_3', SendOrderObject?.UserEmail3);
+  formdata.append('SignatureRemarks', SendOrderObject?.SignatureRemarks);
+  formdata.append('customer_mobile', SendOrderObject?.CustomerPhone);
 
   fetch(
     `${StagApiUrl}/delivery/${SendOrderObject?.Division}/order/${SendOrderObject?.DeliveryNo}`,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + SendOrderObject?.UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + SendOrderObject?.UserToken,
       },
       body: formdata,
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           deleteSyncedSettledDriverOrder(SendOrderObject._id);
-          console.log("responseJson success", responseJson);
+          console.log('responseJson success', responseJson);
         });
       } else {
         console.log(response);
-        response.json().then((responseJson) => {
-          console.log("responseJson failed", responseJson);
+        response.json().then(responseJson => {
+          console.log('responseJson failed', responseJson);
         });
         setSuccessErrorModal(true);
-        setModalText({ type: "error", text: "Sync Failed! Please try again." });
+        setModalText({ type: 'error', text: 'Sync Failed! Please try again.' });
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.log(error);
       setSuccessErrorModal(true);
-      setModalText({ type: "error", text: "Sync Failed! Please try again." });
+      setModalText({ type: 'error', text: 'Sync Failed! Please try again.' });
     });
 };
 
@@ -1182,31 +1182,31 @@ export const GetDriverInvoicePdf = (
   OrderPdfObject,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   console.log(
-    `${StagApiUrl}/v2/delivery/${OrderPdfObject?.Division}/${OrderPdfObject?.DeliveryNo}`
+    `${StagApiUrl}/v2/delivery/${OrderPdfObject?.Division}/${OrderPdfObject?.DeliveryNo}`,
   );
   fetch(
     `${StagApiUrl}/v2/delivery/${OrderPdfObject?.Division}/${OrderPdfObject?.DeliveryNo}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1216,28 +1216,28 @@ export const GetDriverReceiptPdf = (
   OrderPdfObject,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   fetch(
     `${StagApiUrl}/receipt/${OrderPdfObject?.Division}/${OrderPdfObject?.DeliveryNo}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + UserToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1247,35 +1247,35 @@ export const GetDriverReceiptPdf = (
 
 export const ResendDeliveryNote = (InvoiceObject, setloading) => {
   let formdata = new FormData();
-  formdata.append("customer_email_1", InvoiceObject?.Email1);
-  formdata.append("customer_email_2", InvoiceObject?.Email2);
-  formdata.append("customer_email_3", InvoiceObject?.Email3);
+  formdata.append('customer_email_1', InvoiceObject?.Email1);
+  formdata.append('customer_email_2', InvoiceObject?.Email2);
+  formdata.append('customer_email_3', InvoiceObject?.Email3);
 
   fetch(
     `${StagApiUrl}/delivery/resend/` +
       InvoiceObject?.Division +
-      "/" +
+      '/' +
       InvoiceObject?.DeliveryNo,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        Authorization: "Bearer " + InvoiceObject?.UserToken,
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + InvoiceObject?.UserToken,
       },
       body: formdata,
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       //stop loader here
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
-          Alert.alert("Email Resent successfully.");
+        response.json().then(responseJson => {
+          Alert.alert('Email Resent successfully.');
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1285,23 +1285,23 @@ export const ResendDeliveryNote = (InvoiceObject, setloading) => {
 
 export const GetResendEmails = (CustomerObject, setloading, CallBack) => {
   fetch(`${StagApiUrl}/customer/${CustomerObject?.CUSTCODE}/emails`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + CustomerObject?.UserToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + CustomerObject?.UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1311,23 +1311,23 @@ export const GetResendEmails = (CustomerObject, setloading, CallBack) => {
 
 export const getVatPercentage = (userToken, setVATPercentage) => {
   fetch(`${StagApiUrl}/settings`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + userToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           setVATPercentage(parseFloat(responseJson?.data?.VATPERCENTAGE));
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -1336,29 +1336,29 @@ export const getCreditLimitForCustomer = (
   userToken,
   custCode,
   divisionName,
-  CallBack
+  CallBack,
 ) => {
   fetch(
     `${StagApiUrl}/checkCreditLimit?custId=${custCode}&division=${divisionName}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
@@ -1370,54 +1370,54 @@ export const getReadyMixTotal = (
   qty,
   type,
   specific,
-  CallBack
+  CallBack,
 ) => {
   fetch(
     `${StagApiUrl}/getReadyMixTotal?unitCost=${unitCost}&division=${divisionName}&qty=${qty}&type=${type}&specific=${specific}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           console.log({ responseJson });
           CallBack(responseJson);
         });
       } else {
-        console.log("response?.status", response?.status);
-        Alert.alert("Something went wrong.");
+        console.log('response?.status', response?.status);
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     });
 };
 
-export const getDivisionList = async (userToken) => {
+export const getDivisionList = async userToken => {
   return fetch(`${StagApiUrl}/getdivision`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + userToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
         return response.json(); // Return the parsed JSON response
       } else {
-        console.log("getDivisionList error status", response?.status);
-        Alert.alert("Something went wrong.");
-        throw new Error("Division list request failed");
+        console.log('getDivisionList error status', response?.status);
+        Alert.alert('Something went wrong.');
+        throw new Error('Division list request failed');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
       throw error; // Re-throw the error for handling in the calling function
     });
@@ -1434,36 +1434,36 @@ export const getInvoiceList = async (
   setPage,
   setFooterLoading,
   setNoMorePage,
-  setLoading
+  setLoading,
 ) => {
   setFooterLoading && setFooterLoading(true);
   setLoading && setLoading(true);
   const url = `${StagApiUrl}/v2/invoices?division=${division}&page=${Page}${
-    keyword ? `&keyword=${keyword}` : ""
+    keyword ? `&keyword=${keyword}` : ''
   }`;
   console.log({ url });
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
     });
-    console.log("getInvoiceList  status", response?.status);
+    console.log('getInvoiceList  status', response?.status);
 
     if (response?.status === 200) {
       setFooterLoading && setFooterLoading(false);
       setLoading && setLoading(false);
       const responseJson = await response.json();
       const lastPage = responseJson.pagination?.last_page;
-      console.log("getInvoiceList  status", responseJson);
+      console.log('getInvoiceList  status', responseJson);
       if (Page === lastPage) {
         setInvoiceList(
           invoiceList?.length > 0
             ? [...invoiceList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(true);
       } else {
@@ -1472,15 +1472,15 @@ export const getInvoiceList = async (
         setInvoiceList(
           invoiceList?.length > 0
             ? [...invoiceList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(false);
       }
     } else {
-      console.log("getInvoiceList error status", response?.status);
+      console.log('getInvoiceList error status', response?.status);
       setFooterLoading && setFooterLoading(false);
       setLoading && setLoading(false);
-      throw new Error("Something went wrong.");
+      throw new Error('Something went wrong.');
     }
   } catch (error) {
     console.error(error);
@@ -1495,27 +1495,27 @@ export const GetCurrentDriveOrderItemInvoice = (
   InvoiceNo,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   const url = `${StagApiUrl}/v2/invoices/${InvoiceNo}/details?division=${Division}`;
   console.log({ GetCurrentDriveOrderItemInvoice: url });
   fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
@@ -1525,23 +1525,23 @@ export const getSalesManList = async (userToken, division) => {
   const url = `${StagApiUrl}/order/${division}/sales-man`;
   console.log({ url });
   return fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + userToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
         return response.json(); // Return the parsed JSON response
       } else {
-        console.log("getSalesManList error status", response?.status);
-        Alert.alert("Something went wrong.");
-        throw new Error("SalesMan list request failed");
+        console.log('getSalesManList error status', response?.status);
+        Alert.alert('Something went wrong.');
+        throw new Error('SalesMan list request failed');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
       throw error; // Re-throw the error for handling in the calling function
     });
@@ -1550,26 +1550,26 @@ export const getSalesManList = async (userToken, division) => {
 // Function to get the list of companies
 export const getCompaniesList = async (userToken, form = false) => {
   return fetch(
-    `${StagApiUrl}/company/list?${form == true ? `form=${form}` : ""}`,
+    `${StagApiUrl}/company/list?${form == true ? `form=${form}` : ''}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
-    }
+    },
   )
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
         return response.json(); // Return the parsed JSON response
       } else {
-        console.log("getCompaniesList error status", response?.status);
-        Alert.alert("Something went wrong.");
-        throw new Error("Companies list request failed");
+        console.log('getCompaniesList error status', response?.status);
+        Alert.alert('Something went wrong.');
+        throw new Error('Companies list request failed');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
       throw error; // Re-throw the error for handling in the calling function
     });
@@ -1587,36 +1587,36 @@ export const getCashReceiptList = async (
   setPage,
   setFooterLoading,
   setNoMorePage,
-  setLoading
+  setLoading,
 ) => {
   setFooterLoading && setFooterLoading(true);
   setLoading && setLoading(true);
   const url = `${StagApiUrl}/cash-receipt/list?company=${company}&page=${Page}${
-    keyword ? `&search=${keyword}` : ""
-  }${filterDate ? `&date=${moment(filterDate).format("YYYY-MM-DD")}` : ""}`;
+    keyword ? `&search=${keyword}` : ''
+  }${filterDate ? `&date=${moment(filterDate).format('YYYY-MM-DD')}` : ''}`;
   console.log({ url });
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + userToken,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + userToken,
       },
     });
-    console.log("getCashReceiptList  status", response?.status);
+    console.log('getCashReceiptList  status', response?.status);
 
     if (response?.status === 200) {
       setFooterLoading && setFooterLoading(false);
       setLoading && setLoading(false);
       const responseJson = await response.json();
       const lastPage = responseJson.pagination?.last_page;
-      console.log("getCashReceiptList  status", responseJson);
+      console.log('getCashReceiptList  status', responseJson);
       if (Page === lastPage) {
         setCashReceiptList(
           cashReceiptList?.length > 0
             ? [...cashReceiptList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(true);
       } else {
@@ -1625,15 +1625,15 @@ export const getCashReceiptList = async (
         setCashReceiptList(
           cashReceiptList?.length > 0
             ? [...cashReceiptList, ...responseJson.data]
-            : responseJson.data
+            : responseJson.data,
         );
         setNoMorePage(false);
       }
     } else {
-      console.log("getCashReceiptList error status", response?.status);
+      console.log('getCashReceiptList error status', response?.status);
       setFooterLoading && setFooterLoading(false);
       setLoading && setLoading(false);
-      throw new Error("Something went wrong.");
+      throw new Error('Something went wrong.');
     }
   } catch (error) {
     console.error(error);
@@ -1647,52 +1647,52 @@ export const GetCurrentDriveOrderItemCashReceipt = (
   SLNO,
   UserToken,
   CallBack,
-  setloading
+  setloading,
 ) => {
   const url = `${StagApiUrl}/cash-receipt/${SLNO}/receipt`;
   console.log({ GetCurrentDriveOrderItemCashReceipt: url });
   fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + UserToken,
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + UserToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
-        response.json().then((responseJson) => {
+        response.json().then(responseJson => {
           CallBack(responseJson);
         });
       } else {
-        Alert.alert("Something went wrong.");
+        Alert.alert('Something went wrong.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
     })
     .finally(() => setloading(false));
 };
 
 // Function to get the list of payment modes
-export const getPaymentModeList = async (userToken) => {
+export const getPaymentModeList = async userToken => {
   return fetch(`${StagApiUrl}/payment-modes/list`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + userToken,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + userToken,
     },
   })
-    .then((response) => {
+    .then(response => {
       if (response?.status === 200) {
         return response.json(); // Return the parsed JSON response
       } else {
-        console.log("getPaymentModeList error status", response?.status);
-        Alert.alert("Something went wrong.");
-        throw new Error("Payment Mode List request failed");
+        console.log('getPaymentModeList error status', response?.status);
+        Alert.alert('Something went wrong.');
+        throw new Error('Payment Mode List request failed');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error(error);
       throw error; // Re-throw the error for handling in the calling function
     });
@@ -1702,283 +1702,36 @@ export const createCashReceipt = async (UserToken, receiptData) => {
   const url = `${StagApiUrl}/cash-receipt/create`;
   try {
     const response = await fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${UserToken}`,
       },
       body: JSON.stringify(receiptData),
     });
     return response;
   } catch (error) {
-    console.error("Error creating cash receipt:", error);
+    console.error('Error creating cash receipt:', error);
     throw error;
   }
-};
-
-
-export const getMaterialRequestDepartments = async (userToken, divname) => {
-  const url = `${StagApiUrl}/material-request/departments?divname=${encodeURIComponent(divname)}`;
-  console.log('getMaterialRequestDepartments URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('departments failed: ' + response.status);
-};
-
-export const getMaterialRequestPlants = async (userToken, department) => {
-  const url = `${StagApiUrl}/material-request/plants?department=${encodeURIComponent(department)}`;
-  console.log('getMaterialRequestPlants URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('plants failed: ' + response.status);
-};
-
-export const getMaterialRequestEquipments = async (userToken, plant) => {
-  const url = `${StagApiUrl}/material-request/equipments?plant=${encodeURIComponent(plant)}`;
-  console.log('getMaterialRequestEquipments URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('equipments failed: ' + response.status);
-};
-
-export const getMaterialRequestVehicles = async (userToken) => {
-  const url = `${StagApiUrl}/material-request/vehicles`;
-  console.log('getMaterialRequestVehicles URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('vehicles failed: ' + response.status);
-};
-
-export const getMaterialRequestJobDetails = async (userToken) => {
-  const url = `${StagApiUrl}/material-request/job-details`;
-  console.log('getMaterialRequestJobDetails URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('job-details failed: ' + response.status);
-};
-
-export const cancelMaterialRequestDraft = async (userToken, mrNo) => {
-  const url = `${StagApiUrl}/material-request/${mrNo}/cancel-draft`;
-  console.log('cancelMaterialRequestDraft URL:', url);
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('cancel-draft failed: ' + response.status);
-};
-
-export const getMaterialRequestGenerate = async (userToken) => {
-  const url = `${StagApiUrl}/material-request/generate`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('generate failed: ' + response.status);
-};
-
-export const getMaterialRequestDivisions = async (userToken) => {
-  const url = `${StagApiUrl}/material-request/divisions`;
-  console.log('getMaterialRequestDivisions URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('divisions failed: ' + response.status);
-};
-
-export const getMaterialRequestList = async (
-  userToken,
-  fromDate,
-  toDate,
-  division,
-  dept,
-  mrno,
-  list,
-  setList,
-  Page,
-  setPage,
-  setFooterLoading,
-  setNoMorePage,
-  setLoading
-) => {
-  setFooterLoading && setFooterLoading(true);
-  setLoading && setLoading(true);
-  const url = `${StagApiUrl}/material-request/list?from_date=${fromDate}&to_date=${toDate}&division=${division ?? ''}&dept=${dept ?? ''}&mrno=${mrno ?? ''}&per_page=20&page=${Page}`;
-  console.log({getMaterialRequestList: url});
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + userToken,
-      },
-    });
-    if (response?.status === 200) {
-      const responseJson = await response.json();
-      console.log({getMaterialRequestListResponse: responseJson});
-      const lastPage = responseJson.data?.last_page;
-      const newData = list?.length > 0 ? [...list, ...(responseJson.data?.data ?? [])] : (responseJson.data?.data ?? []);
-      console.log({newData});
-      setList(newData);
-      if (Page >= lastPage) {
-        setNoMorePage(true);
-      } else {
-        setPage(Page + 1);
-        setNoMorePage(false);
-      }
-    } else {
-      const errText = await response.text();
-      console.error('getMaterialRequestList error status:', response.status, errText);
-    }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setFooterLoading && setFooterLoading(false);
-    setLoading && setLoading(false);
-  }
-};
-
-export const submitMaterialRequest = async (userToken, payload) => {
-  const url = `${StagApiUrl}/material-request/save`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-    body: JSON.stringify(payload),
-  });
-  if (response.status === 200 || response.status === 201) return response.json();
-  const errText = await response.text();
-  let message = errText;
-  try {
-    message = JSON.parse(errText)?.message ?? errText;
-  } catch (e) {}
-  throw new Error(message);
-};
-
-export const getMaterialRequestDetail = async (userToken, mrNo) => {
-  const url = `${StagApiUrl}/material-request/${mrNo}/detail`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('detail failed: ' + response.status);
-};
-
-export const getMaterialRequestAttachments = async (userToken, mrNo) => {
-  const url = `${StagApiUrl}/material-request/${mrNo}/attachments`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('attachments failed: ' + response.status);
-};
-
-export const updateMaterialRequest = async (userToken, mrNo, payload) => {
-  const url = `${StagApiUrl}/material-request/${mrNo}/update`;
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-    body: JSON.stringify(payload),
-  });
-  if (response.status === 200 || response.status === 201) return response.json();
-  const errText = await response.text();
-  let message = errText;
-  try {
-    message = JSON.parse(errText)?.message ?? errText;
-  } catch (e) {}
-  throw new Error(message);
-};
-
-export const getMaterialRequestStocks = async (userToken, stockCode = '', stockName = '', page = 1) => {
-  const url = `${StagApiUrl}/material-request/stocks?stock_code=${encodeURIComponent(stockCode)}&stock_name=${encodeURIComponent(stockName)}&per_page=50&page=${page}`;
-  console.log('getMaterialRequestStocks URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
-    },
-  });
-  if (response.status === 200) return response.json();
-  throw new Error('stocks failed: ' + response.status);
 };
 
 export const updateCashReceipt = async (UserToken, receiptData) => {
   const url = `${StagApiUrl}/cash-receipt/${receiptData.SLNO}/update`;
   try {
     const response = await fetch(url, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${UserToken}`,
       },
       body: JSON.stringify(receiptData),
     });
     return response;
   } catch (error) {
-    console.error("Error creating cash receipt:", error);
+    console.error('Error creating cash receipt:', error);
     throw error;
   }
 };

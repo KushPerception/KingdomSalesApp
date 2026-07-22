@@ -6,7 +6,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,6 +13,7 @@ import usePaginatedList from '../../../hooks/usePaginatedList';
 import { fetchLandingCostList } from '../../../utility/ApiHelpers/LandingCostApi';
 import { lightGreyTextColor, primaryColor } from '../../../utility/colors';
 import { fonts } from '../../../utility/GlobalStyles';
+import FabButton from '../../CommonComponents/FabButton';
 import HeaderComponent from '../../CommonComponents/Header';
 import LandingCostCard from './LandingCostCard';
 
@@ -97,13 +97,9 @@ const CostController = props => {
         />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        activeOpacity={0.8}
+      <FabButton
         onPress={() => props.navigation.navigate('CreateLandingCost')}
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 };
@@ -115,28 +111,6 @@ const styles = StyleSheet.create({
   footer: { marginVertical: 12 },
   empty: { flex: 1, alignItems: 'center', marginTop: 40 },
   emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: primaryColor,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: '#fff',
-    lineHeight: 32,
-    fontFamily: fonts.Lato_Regular,
-  },
 });
 
 export default CostController;

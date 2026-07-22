@@ -13,13 +13,15 @@ import {
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { TextInput } from 'react-native-gesture-handler';
-import { getMaterialRequestList } from '../../../utility/ApiHelpers/StagingApis';
+import usePaginatedList from '../../../hooks/usePaginatedList';
+import { fetchMaterialRequestList } from '../../../utility/ApiHelpers/MaterialRequestApi';
 import {
   BlackColor,
   modalBackgroundColor,
   primaryColor,
 } from '../../../utility/colors';
 import ButtonWithLoader from '../../CommonComponents/ButtonLoader';
+import FabButton from '../../CommonComponents/FabButton';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
 import OfflineNotice from '../../CommonComponents/OfflineNotice';
@@ -27,12 +29,7 @@ import OfflineNotice from '../../CommonComponents/OfflineNotice';
 const SEARCH_BY_OPTIONS = ['MRNO', 'Division', 'Dept'];
 
 const MaterialRequestList = props => {
-  const [list, setList] = useState([]);
-  const [userToken, setUserToken] = useState('');
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [footerLoading, setFooterLoading] = useState(false);
-  const [noMorePage, setNoMorePage] = useState(false);
+  const tokenRef = useRef(null);
   const [internetStatus, setInternetStatus] = useState(true);
 
   const [fromDate, setFromDate] = useState(
@@ -47,12 +44,30 @@ const MaterialRequestList = props => {
   const [keyword, setKeyword] = useState('');
   const isFirstRun = useRef(true);
 
+  const { list, loading, footerLoading, noMorePages, search, loadMore } =
+    usePaginatedList({
+      fetchPage: (filters, page) =>
+        fetchMaterialRequestList(tokenRef.current, filters, page),
+    });
+
+  const buildFilters = () => ({
+    from_date: moment(fromDate).format('YYYY-MM-DD'),
+    to_date: moment(toDate).format('YYYY-MM-DD'),
+    division: searchBy === 'Division' ? keyword : '',
+    dept: searchBy === 'Dept' ? keyword : '',
+    mrno: searchBy === 'MRNO' ? keyword : '',
+  });
+
   useEffect(() => {
     NetInfo.addEventListener(state => setInternetStatus(state.isConnected));
   }, []);
 
   useEffect(() => {
-    fetchData();
+    (async () => {
+      tokenRef.current = await AsyncStorage.getItem('access_token');
+      search(buildFilters());
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -61,34 +76,11 @@ const MaterialRequestList = props => {
       return;
     }
     const timer = setTimeout(() => {
-      onSearch();
+      search(buildFilters());
     }, 400);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword, searchBy]);
-
-  const getFilterParams = () => ({
-    division: searchBy === 'Division' ? keyword : '',
-    dept: searchBy === 'Dept' ? keyword : '',
-    mrno: searchBy === 'MRNO' ? keyword : '',
-  });
-
-  const callApi = (token, filters, fd, td, existingList, pg) => {
-    getMaterialRequestList(
-      token,
-      moment(fd).format('YYYY-MM-DD'),
-      moment(td).format('YYYY-MM-DD'),
-      filters.division,
-      filters.dept,
-      filters.mrno,
-      existingList,
-      setList,
-      pg,
-      setPage,
-      setFooterLoading,
-      setNoMorePage,
-      setLoading,
-    );
-  };
 
   const handleLogout = () => {
     Alert.alert('Hold on!', 'Are you sure you want to Logout from App?', [
@@ -103,40 +95,13 @@ const MaterialRequestList = props => {
     ]);
   };
 
-  const fetchData = async () => {
-    const token = await AsyncStorage.getItem('access_token');
-    if (token) {
-      setUserToken(token);
-      callApi(
-        token,
-        { division: '', dept: '', mrno: '' },
-        fromDate,
-        toDate,
-        [],
-        1,
-      );
-    }
-  };
-
-  const onSearch = async () => {
-    setList([]);
-    setPage(1);
-    setNoMorePage(false);
-    const token = await AsyncStorage.getItem('access_token');
-    callApi(token, getFilterParams(), fromDate, toDate, [], 1);
-  };
-
-  const onLoadMore = () => {
-    callApi(userToken, getFilterParams(), fromDate, toDate, list, page);
-  };
-
   const RenderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
       activeOpacity={0.6}
       onPress={() => {
         if (item?.is_editable) {
-          props.navigation.navigate('MaterialRequest1', { mrno: item.MRNO });
+          props.navigation.navigate('MaterialRequestForm', { mrno: item.MRNO });
         } else {
           Alert.alert(
             'Editing Not Allowed',
@@ -172,10 +137,10 @@ const MaterialRequestList = props => {
   );
 
   const RenderFooter = () =>
-    list?.length > 0 && !noMorePage ? (
+    list?.length > 0 && !noMorePages ? (
       <View style={styles.footer}>
         <ButtonWithLoader
-          onPress={onLoadMore}
+          onPress={loadMore}
           title="Load More"
           loading={footerLoading}
         />
@@ -189,12 +154,9 @@ const MaterialRequestList = props => {
         Title="Material Requests"
         onPressRight2={handleLogout}
       />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => props.navigation.navigate('MaterialRequest1')}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FabButton
+        onPress={() => props.navigation.navigate('MaterialRequestForm')}
+      />
       <OfflineNotice
         isConnected={internetStatus}
         setIsConnected={setInternetStatus}
@@ -456,20 +418,6 @@ const styles = StyleSheet.create({
   itemText: { fontSize: 13, paddingTop: 2, color: '#444' },
   footer: { padding: 10, alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  fab: {
-    position: 'absolute',
-    bottom: 100,
-    right: 24,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: primaryColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    zIndex: 10,
-  },
-  fabText: { fontSize: 30, color: 'white', lineHeight: 34 },
 });
 
 export default MaterialRequestList;
