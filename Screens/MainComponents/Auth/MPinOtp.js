@@ -57,6 +57,13 @@ const MPinOtp = props => {
     setPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH));
   };
 
+  useEffect(() => {
+    if (pin.length === PIN_LENGTH) {
+      OnClickSubmit(pin);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin]);
+
   const OnClickSubmit = MPin => {
     setPin('');
 
