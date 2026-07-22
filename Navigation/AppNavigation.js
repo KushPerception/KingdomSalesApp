@@ -55,6 +55,11 @@ const AppNavigator = () => {
     if (
       CurrentScreen === 'Home' ||
       CurrentScreen === 'DriverOrderList' ||
+      CurrentScreen === 'DriverOrders' ||
+      CurrentScreen === 'MaterialRequestList' ||
+      CurrentScreen === 'PurchaseManager' ||
+      CurrentScreen === 'PurchaseOrderScreen' ||
+      CurrentScreen === 'CostController' ||
       CurrentScreen === 'Login'
     ) {
       Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [

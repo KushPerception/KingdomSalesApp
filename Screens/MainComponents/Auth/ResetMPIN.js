@@ -62,19 +62,24 @@ const ResetMPIN = props => {
     if (MPin.length === PIN_LENGTH) {
       setHasError(false);
       AsyncStorage.setItem('UserMPIN', MPin);
-      if (UserRoleType === 'Driver') {
-        props.navigation.navigate('DriverOrders');
-      } else if (UserRoleType === 'REQUESTER') {
-        props.navigation.navigate('MaterialRequestList');
-      } else if (UserRoleType === 'PURCHASEMANAGER') {
-        props.navigation.navigate('PurchaseManager');
-      } else if (UserRoleType === 'CEO' || UserRoleType === 'MD') {
-        props.navigation.navigate('PurchaseOrderScreen');
-      } else if (UserRoleType === 'COSTCONTROLLER') {
-        props.navigation.navigate('CostController');
-      } else {
-        props.navigation.navigate('Home');
-      }
+
+      const homeScreen =
+        UserRoleType === 'Driver'
+          ? 'DriverOrders'
+          : UserRoleType === 'REQUESTER'
+          ? 'MaterialRequestList'
+          : UserRoleType === 'PURCHASEMANAGER'
+          ? 'PurchaseManager'
+          : UserRoleType === 'CEO' || UserRoleType === 'MD'
+          ? 'PurchaseOrderScreen'
+          : UserRoleType === 'COSTCONTROLLER'
+          ? 'CostController'
+          : 'Home';
+
+      props.navigation.reset({
+        index: 0,
+        routes: [{name: homeScreen}],
+      });
     } else {
       setHasError(true);
       Alert.alert('Invalid MPIN');
