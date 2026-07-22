@@ -190,14 +190,6 @@ const MaterialRequestAttachment = props => {
   const removeFile = idx => setFiles(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async () => {
-    if (!isEdit && files.length === 0) {
-      Alert.alert('Validation', 'Please add at least one attachment.');
-      return;
-    }
-    if (isEdit && files.length === 0 && existingAttachments.length === 0) {
-      Alert.alert('Validation', 'Please add at least one attachment.');
-      return;
-    }
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('access_token');

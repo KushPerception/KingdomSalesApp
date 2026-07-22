@@ -108,7 +108,10 @@ const MaterialRequestList = props => {
       }}>
       <View style={styles.itemTitleRow}>
         <Text style={styles.itemTitle}>{item?.MRNO ?? '-'}</Text>
-        {item?.is_editable && <Text style={styles.editBadge}>Edit</Text>}
+        <View style={styles.badgeRow}>
+          {<Text style={[styles.statusBadge, {backgroundColor: getStatusColor(item?.MRSTATUS)}]}>{item?.MRSTATUS ?? 'PENDING'}</Text>}
+          {item?.is_editable && <Text style={styles.editBadge}>Edit</Text>}
+        </View>
       </View>
       <Text style={styles.itemText}>Date: {item?.MRDATE ?? '-'}</Text>
       <Text style={styles.itemText}>Division: {item?.DIVISION ?? '-'}</Text>
@@ -238,6 +241,17 @@ const MaterialRequestList = props => {
   );
 };
 
+const getStatusColor = status => {
+  switch (status?.toUpperCase()) {
+    case 'APPROVED': return '#2e7d32';
+    case 'PENDING':  return '#e65100';
+    case 'REJECTED': return '#c62828';
+    case 'CANCEL':   return '#757575';
+    case 'CLOSED':   return '#555';
+    default:         return '#1565c0';
+  }
+};
+
 const styles = StyleSheet.create({
   container: {flex: 1},
   dateRow: {
@@ -336,6 +350,8 @@ const styles = StyleSheet.create({
   },
   itemTitleRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4},
   itemTitle: {fontSize: 15, fontWeight: 'bold'},
+  badgeRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
+  statusBadge: {fontSize: 11, color: 'white', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2},
   editBadge: {fontSize: 11, color: primaryColor, borderWidth: 1, borderColor: primaryColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1},
   itemText: {fontSize: 13, paddingTop: 2, color: '#444'},
   footer: {padding: 10, alignItems: 'center'},

@@ -246,8 +246,8 @@ const MaterialRequest1 = props => {
   );
 
   const handleNext = () => {
-    if (!division || !dept || !plant || !eqp || !priority) {
-      Alert.alert('Validation', 'Division, Dept, Plant Name, EQP Name and Priority are required.');
+    if (!division) {
+      Alert.alert('Validation', 'Division is required.');
       return;
     }
     const payload = {mrNo, mrDate, division, dept, plant, eqp, vehNo, vehDesc, priority, jobRefNo, isEditMode};
@@ -320,15 +320,15 @@ const MaterialRequest1 = props => {
           </View>
 
           <DropdownField label="Stk Division *" value={division} onPress={() => setActiveModal('div')} />
-          <DropdownField label="Dept Name *"    value={dept}     onPress={() => setActiveModal('dept')}  disabled={!division} />
-          <DropdownField label="Plant Name *"   value={plant}    onPress={() => setActiveModal('plant')} disabled={!dept} />
-          <DropdownField label="EQP Name *"     value={eqp}      onPress={() => setActiveModal('eqp')}   disabled={!plant} />
+          <DropdownField label="Dept Name"    value={dept}     onPress={() => setActiveModal('dept')}  disabled={!division} />
+          <DropdownField label="Plant Name"   value={plant}    onPress={() => setActiveModal('plant')} disabled={!dept} />
+          <DropdownField label="EQP Name"     value={eqp}      onPress={() => setActiveModal('eqp')}   disabled={!plant} />
           <DropdownField label="Vehicle No"     value={vehNo}    onPress={() => setActiveModal('veh')} />
 
           <Text style={styles.label}>Vehicle Desc</Text>
           <TextInput style={styles.input} value={vehDesc} onChangeText={setVehDesc} placeholder="Vehicle Desc" />
 
-          <DropdownField label="Priority *" value={priority}  onPress={() => setActiveModal('priority')} />
+          <DropdownField label="Priority" value={priority}  onPress={() => setActiveModal('priority')} />
           <DropdownField label="Job Ref No" value={jobRefNo}  onPress={() => setActiveModal('job')} />
 
           <TouchableOpacity style={styles.NextBtn} onPress={handleNext}>

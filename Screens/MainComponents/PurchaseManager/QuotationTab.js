@@ -48,6 +48,7 @@ const QuotationTab = ({
                 <Text style={[styles.hCol, styles.colHeader]}>Supplier</Text>
                 <Text style={[styles.hCol, styles.colHeader]}>Qty</Text>
                 <Text style={[styles.hCol, styles.colHeader]}>Rate</Text>
+                <Text style={[styles.hCol, styles.colHeader]}>Amount</Text>
                 <Text style={[styles.hCol, styles.colHeader]}>Status</Text>
               </View>
               {item.enquiries?.map((eq, i) => (
@@ -59,30 +60,28 @@ const QuotationTab = ({
                   <Text style={styles.hCol}>{eq.supplier}</Text>
                   <Text style={styles.hCol}>{eq.qty ?? '-'}</Text>
                   <Text style={styles.hCol}>{eq.rate ?? '-'}</Text>
+                  <Text style={styles.hCol}>{eq.amount ?? '-'}</Text>
                   <View style={[styles.hCol, styles.statusCell]}>
-                    <Text
-                      style={[
-                        styles.statusText,
-                        eq.approved && styles.approved,
-                        eq.rejected && styles.rejected,
-                      ]}
+                    {(() => {
+                      const s = eq.status ?? (eq.approved ? 'approved' : eq.rejected ? 'rejected' : 'pending');
+                      return (
+                        <Text
+                          style={[
+                            styles.statusText,
+                            s === 'approved' && styles.approved,
+                            s === 'rejected' && styles.rejected,
+                          ]}
+                        >
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </Text>
+                      );
+                    })()}
+                    <TouchableOpacity
+                      onPress={() => onPressMenu(eq)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      {eq.approved
-                        ? 'Approved'
-                        : eq.rejected
-                        ? 'Rejected'
-                        : 'Pending'}
-                    </Text>
-                    {!eq.approved && !eq.rejected && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          onPressMenu(eq);
-                        }}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Text style={styles.threeDot}>⋮</Text>
-                      </TouchableOpacity>
-                    )}
+                      <Text style={styles.threeDot}>⋮</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               ))}

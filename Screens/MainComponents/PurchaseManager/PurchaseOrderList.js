@@ -63,11 +63,13 @@ const PurchaseOrderList = ({ navigation }) => {
   useEffect(() => {
     (async () => {
       tokenRef.current = await AsyncStorage.getItem('access_token');
+      console.log('[PurchaseOrderList] Token loaded - fetching initial list');
       search(DEFAULT_FILTERS);
     })();
   }, []);
 
   const handleSearch = () => {
+    console.log('[PurchaseOrderList] Search triggered - searchBy:', searchBy, '| keyword:', keyword, '| status:', statusFilter, '| from:', fromDate, '| to:', toDate);
     search({
       pono: searchBy === 'PONO' ? keyword : '',
       department: searchBy === 'Department' ? keyword : '',
@@ -79,7 +81,21 @@ const PurchaseOrderList = ({ navigation }) => {
     });
   };
 
+  const handleStatusChange = newStatus => {
+    setStatusFilter(newStatus);
+    search({
+      pono: searchBy === 'PONO' ? keyword : '',
+      department: searchBy === 'Department' ? keyword : '',
+      supname: searchBy === 'Supplier' ? keyword : '',
+      from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
+      to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
+      approved_only: newStatus === 'Approved' ? 1 : '',
+      rejected_only: newStatus === 'Rejected' ? 1 : '',
+    });
+  };
+
   const handleClear = () => {
+    console.log('[PurchaseOrderList] Filters cleared - reloading list');
     setKeyword('');
     setFromDate(null);
     setToDate(null);
@@ -87,7 +103,10 @@ const PurchaseOrderList = ({ navigation }) => {
     search(DEFAULT_FILTERS);
   };
 
-  const openPOSheet = po => setPOBottomSheet({ visible: true, po });
+  const openPOSheet = po => {
+    console.log('[PurchaseOrderList] PO sheet opened - PONO:', po?.PONO);
+    setPOBottomSheet({ visible: true, po });
+  };
   const closePOSheet = () => setPOBottomSheet({ visible: false, po: null });
 
   const handlePOAction = async () => {
@@ -95,9 +114,11 @@ const PurchaseOrderList = ({ navigation }) => {
     const mode = poActionModal.mode;
     setPOActioning(true);
     try {
+      console.log('[PurchaseOrderList] PO action:', mode, '| PONO:', poNo, '| remarks:', poActionRemarks);
       const action =
         mode === 'reject' ? rejectPurchaseOrder : approvePurchaseOrder;
       await action(tokenRef.current, poNo, poActionRemarks);
+      console.log('[PurchaseOrderList] PO action success:', mode, '| PONO:', poNo);
       setPOActionModal({ visible: false, po: null, mode: 'approve' });
       search(DEFAULT_FILTERS);
     } catch (e) {
@@ -107,7 +128,11 @@ const PurchaseOrderList = ({ navigation }) => {
     }
   };
 
-  const poSheetButtons = [
+  const po = poBottomSheet.po;
+  const isActioned = !!(po?.approved || po?.rejected);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const poSheetButtons = React.useMemo(() => [
     {
       label: 'Enquiry Details',
       onPress: () => {
@@ -152,7 +177,7 @@ const PurchaseOrderList = ({ navigation }) => {
         navigation.navigate('PMCommonScreen', {
           title: 'Purchase Order Details',
           apiUrl: `${mainUrl}api/purchase-order/${poNo}/detail`,
-          isDetail: true,
+          isPODetail: true,
         });
       },
     },
@@ -168,27 +193,19 @@ const PurchaseOrderList = ({ navigation }) => {
         });
       },
     },
-    {
-      label: 'Reject',
-      onPress: () => {
-        const po = poBottomSheet.po;
+    ...(['Reject', 'Approve'].map((label, i) => ({
+      label,
+      onPress: isActioned ? null : () => {
         closePOSheet();
         setPOActionRemarks('');
-        setPOActionModal({ visible: true, po, mode: 'reject' });
+        setPOActionModal({ visible: true, po, mode: i === 0 ? 'reject' : 'approve' });
       },
-      danger: true,
-    },
-    {
-      label: 'Approve',
-      onPress: () => {
-        const po = poBottomSheet.po;
-        closePOSheet();
-        setPOActionRemarks('');
-        setPOActionModal({ visible: true, po, mode: 'approve' });
-      },
-      accent: true,
-    },
-  ];
+      danger: i === 0,
+      accent: i === 1,
+      disabled: isActioned,
+    }))),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [poBottomSheet.po]);
 
   return (
     <View style={styles.container}>
@@ -221,7 +238,7 @@ const PurchaseOrderList = ({ navigation }) => {
         onChangeToDate={setToDate}
         statusOptions={STATUS_OPTIONS}
         statusFilter={statusFilter}
-        onChangeStatus={setStatusFilter}
+        onChangeStatus={handleStatusChange}
         onSearch={handleSearch}
         onClear={handleClear}
       />
@@ -235,9 +252,25 @@ const PurchaseOrderList = ({ navigation }) => {
         <FlatList
           data={list}
           keyExtractor={(_, i) => i.toString()}
-          renderItem={({ item }) => (
-            <PurchaseOrderTab item={item} onPressMenu={openPOSheet} />
-          )}
+          renderItem={({ item, index }) => {
+            if (index === 0) {
+              console.log('[PurchaseOrderList] Loaded', list.length, 'items:');
+              list.forEach((po, i) => console.log(`  [${i + 1}] PONO=${po.PONO} | DEPT=${po.DEPARTMENT} | SUPNAME=${po.SUPNAME?.trim()} | NETAMT=${po.NETAMT} ${po.CURRENCY}`));
+            }
+            return (
+              <PurchaseOrderTab
+                item={item}
+                onPressMenu={openPOSheet}
+                onPress={po => {
+                  navigation.navigate('PMCommonScreen', {
+                    title: 'Purchase Order Details',
+                    apiUrl: `${mainUrl}api/purchase-order/${po.PONO}/detail`,
+                    isPODetail: true,
+                  });
+                }}
+              />
+            );
+          }}
           contentContainerStyle={styles.listContent}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}

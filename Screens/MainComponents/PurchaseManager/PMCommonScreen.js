@@ -30,12 +30,77 @@ const Row = ({label, value}) =>
     </View>
   ) : null;
 
+// ─── PO Detail renderer ──────────────────────────────────────────────────────
+const PO_HEADER_FIELDS = [
+  {key: 'PONO', label: 'PO No'},
+  {key: 'PODATE', label: 'PO Date'},
+  {key: 'SUPNAME', label: 'Supplier'},
+  {key: 'DEPARTMENT', label: 'Department'},
+  {key: 'TOTAAMT', label: 'Total Amount'},
+  {key: 'DISCOUNT', label: 'Discount'},
+  {key: 'VATTOT', label: 'VAT Total'},
+  {key: 'NETAMT', label: 'Net Amount'},
+  {key: 'CURRENCY', label: 'Currency'},
+  {key: 'PAYMETHOD', label: 'Pay Method'},
+];
+const PO_ITEM_COLS = [
+  {key: 'SLNO', label: 'SL No'},
+  {key: 'STOCKNAME', label: 'Stock Name'},
+  {key: 'QTY', label: 'Qty'},
+  {key: 'RATE', label: 'Rate'},
+  {key: 'DISCOUNTRATE', label: 'Discount'},
+  {key: 'VATAMT', label: 'VAT Amt'},
+  {key: 'AMT', label: 'Amount'},
+];
+
+const PODetailView = ({data}) => {
+  if (!data) return null;
+  const items = data.items ?? data.Items ?? [];
+  return (
+    <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.paddedCard}>
+        {PO_HEADER_FIELDS.map(({key, label}) =>
+          data[key] != null && data[key] !== '' ? (
+            <Row key={key} label={label} value={String(data[key])} />
+          ) : null,
+        )}
+      </View>
+      {items.length > 0 && (
+        <View>
+          <Text style={styles.sectionTitle}>Items</Text>
+          <View style={styles.card}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View>
+                <View style={styles.tableHeader}>
+                  {PO_ITEM_COLS.map(({key, label}) => (
+                    <Text key={key} style={[styles.hCol, styles.colHeader]}>{label}</Text>
+                  ))}
+                </View>
+                {items.map((row, i) => (
+                  <View key={i} style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}>
+                    {PO_ITEM_COLS.map(({key}) => (
+                      <Text key={key} style={styles.hCol}>
+                        {row[key] != null ? String(row[key]) : '-'}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      )}
+    </ScrollView>
+  );
+};
+
 // ─── Detail renderer — renders every key/value from the data object ───────────
 const DetailView = ({data}) => {
+  console .log('[DetailView] data =', JSON.stringify(data, null, 2));
   if (!data) return null;
 
   // Pull out nested arrays (items, enquiries, etc.) to render separately
-  const fields = Object.entries(data).filter(([, v]) => !Array.isArray(v) && typeof v !== 'object');
+  const fields = Object.entries(data).filter(([k, v]) => !Array.isArray(v) && typeof v !== 'object' && !MR_HIDDEN_FIELDS.has(k));
   const arrays = Object.entries(data).filter(([, v]) => Array.isArray(v));
 
   return (
@@ -50,28 +115,41 @@ const DetailView = ({data}) => {
         ))}
       </View>
 
-      {arrays.map(([key, arr]) =>
-        arr.length > 0 ? (
+      {arrays.map(([key, arr]) => {
+        if (!arr.length) return null;
+        const cols = Object.keys(arr[0] ?? {}).filter(
+          ck => !Array.isArray(arr[0][ck]) && typeof arr[0][ck] !== 'object' && !MR_HIDDEN_FIELDS.has(ck) && !ITEMS_STATUS_HIDDEN.has(ck),
+        );
+        return (
           <View key={key}>
             <Text style={styles.sectionTitle}>
               {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
             </Text>
-            {arr.map((subItem, i) => (
-              <View key={i} style={styles.paddedCard}>
-                {Object.entries(subItem)
-                  .filter(([, v]) => !Array.isArray(v) && typeof v !== 'object')
-                  .map(([k, v]) => (
-                    <Row
-                      key={k}
-                      label={k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                      value={v}
-                    />
+            <View style={styles.card}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                  <View style={styles.tableHeader}>
+                    {cols.map(c => (
+                      <Text key={c} style={[styles.hCol, styles.colHeader]}>
+                        {c.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())}
+                      </Text>
+                    ))}
+                  </View>
+                  {arr.map((subItem, i) => (
+                    <View key={i} style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}>
+                      {cols.map(c => (
+                        <Text key={c} style={styles.hCol}>
+                          {subItem[c] != null ? String(subItem[c]) : '-'}
+                        </Text>
+                      ))}
+                    </View>
                   ))}
-              </View>
-            ))}
+                </View>
+              </ScrollView>
+            </View>
           </View>
-        ) : null,
-      )}
+        );
+      })}
     </ScrollView>
   );
 };
@@ -109,6 +187,9 @@ const AttachmentsView = ({data}) => {
   );
 };
 
+const MR_HIDDEN_FIELDS = new Set(['is_editable', 'Is Editable', 'PRIORITY', 'Priority', 'SLNO', 'SL No', 'DTSL']);
+const ITEMS_STATUS_HIDDEN = new Set(['approved', 'rejected', 'status', 'is_pending', 'pending']);
+
 // ─── MR Details renderer ─────────────────────────────────────────────────────
 const MrDetailsView = ({data}) => {
   const [expandedKey, setExpandedKey] = useState(null);
@@ -122,7 +203,7 @@ const MrDetailsView = ({data}) => {
   }
 
   const renderMrItem = ({item, index}) => {
-    const fields = Object.entries(item).filter(([, v]) => !Array.isArray(v) && typeof v !== 'object');
+    const fields = Object.entries(item).filter(([k, v]) => !Array.isArray(v) && typeof v !== 'object' && !MR_HIDDEN_FIELDS.has(k));
     const arrays = Object.entries(item).filter(([, v]) => Array.isArray(v) && v.length > 0);
 
     return (
@@ -143,7 +224,7 @@ const MrDetailsView = ({data}) => {
           const key = `${index}_${k}`;
           const isExpanded = expandedKey === key;
           const cols = Object.keys(arr[0] ?? {}).filter(
-            ck => !Array.isArray(arr[0][ck]) && typeof arr[0][ck] !== 'object',
+            ck => !Array.isArray(arr[0][ck]) && typeof arr[0][ck] !== 'object' && !MR_HIDDEN_FIELDS.has(ck),
           );
           return (
             <View key={k}>
@@ -231,31 +312,28 @@ const EqDetailsView = ({data, onAttachPress}) => {
               <View>
                 <View style={styles.tableHeader}>
                   <Text style={[styles.hCol, styles.colHeader]}>EQ No</Text>
-                  <Text style={[styles.hCol, styles.colHeader]}>Supplier</Text>
-                  <Text style={[styles.hCol, styles.colHeader]}>Qty</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>EQ Date</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>Supplier Name</Text>
+                  <Text style={[styles.hColLg, styles.colHeader]}>Added By & Time</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>Enquiry Type</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>MR No</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>Stock Name</Text>
                   <Text style={[styles.hCol, styles.colHeader]}>Unit</Text>
                   <Text style={[styles.hCol, styles.colHeader]}>Rate</Text>
-                  <Text style={[styles.hCol, styles.colHeader]}>Status</Text>
-                  <Text style={[styles.hColSm, styles.colHeader]}>Attach</Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>Amount</Text>
                 </View>
                 {item.enquiries.map((eq, j) => (
                   <View key={j} style={[styles.tableRow, j % 2 === 0 && styles.tableRowAlt]}>
                     <Text style={styles.hCol}>{eq.EQNO ?? eq.eq_no ?? '-'}</Text>
+                    <Text style={styles.hCol}>{eq.ENQDATE ?? eq.enq_date ?? '-'}</Text>
                     <Text style={styles.hCol}>{eq.SUPNAME ?? eq.supplier ?? '-'}</Text>
-                    <Text style={styles.hCol}>{eq.QTY ?? eq.qty ?? '-'}</Text>
+                    <Text style={styles.hColLg}>{[eq.added_by, eq.added_time].filter(Boolean).join(' ') || '-'}</Text>
+                    <Text style={styles.hCol}>{eq.ENQTYPE ?? eq.enquiry_type ?? '-'}</Text>
+                    <Text style={styles.hCol}>{eq.MRNO ?? eq.mrno ?? eq.mr_no ?? '-'}</Text>
+                    <Text style={styles.hCol}>{item.stock_name ?? '-'}</Text>
                     <Text style={styles.hCol}>{eq.UNIT ?? eq.unit ?? '-'}</Text>
                     <Text style={styles.hCol}>{eq.RATE ?? eq.rate ?? '-'}</Text>
-                    <View style={[styles.hCol, styles.statusCell]}>
-                      <Text style={[styles.statusText, eq.approved && styles.approved, eq.rejected && styles.rejected]}>
-                        {eq.approved ? 'Approved' : eq.rejected ? 'Rejected' : 'Pending'}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.hColSm}
-                      onPress={() => onAttachPress(eq)}
-                      hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-                      <Text style={styles.attachIcon}>📎</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.hCol}>{eq.AMOUNT ?? eq.amount ?? '-'}</Text>
                   </View>
                 ))}
               </View>
@@ -278,7 +356,7 @@ const EqDetailsView = ({data, onAttachPress}) => {
 
 // ─── Common Screen ────────────────────────────────────────────────────────────
 const PMCommonScreen = props => {
-  const {title, apiUrl, isDetail, isEqDetails, isMrDetails} = props.route?.params ?? {};
+  const {title, apiUrl, isDetail, isEqDetails, isMrDetails, isPODetail} = props.route?.params ?? {};
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -317,7 +395,7 @@ const PMCommonScreen = props => {
           throw new Error(json?.message ?? 'Request failed: ' + res.status);
         }
 
-        setData(isDetail || isEqDetails || isMrDetails ? json.data : json.data ?? []);
+        setData(isPODetail || isDetail || isEqDetails || isMrDetails ? json.data : json.data ?? []);
       } catch (e) {
         console.error('[PMCommonScreen] error =', e.message);
         setError(e.message ?? 'Failed to load data.');
@@ -342,6 +420,8 @@ const PMCommonScreen = props => {
         <View style={styles.empty}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
+      ) : isPODetail ? (
+        <PODetailView data={data} />
       ) : isMrDetails ? (
         <MrDetailsView data={data} />
       ) : isEqDetails ? (
@@ -464,6 +544,7 @@ const styles = StyleSheet.create({
   tableRowAlt: {backgroundColor: '#f9f9f9'},
   col: {flex: 1, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular},
   hCol: {width: 110, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular, paddingRight: 6},
+  hColLg: {width: 160, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular, paddingRight: 6},
   hColSm: {width: 54, fontSize: 12, color: BlackColor, fontFamily: fonts.Lato_Regular, alignItems: 'center'},
   colHeader: {color: whiteColor, fontFamily: fonts.Lato_Bold, fontSize: 12},
   statusCell: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},

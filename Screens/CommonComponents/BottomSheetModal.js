@@ -22,21 +22,24 @@ const BottomSheetModal = ({visible, onClose, buttons}) => (
     <Pressable style={styles.overlay} onPress={onClose} />
     <View style={styles.sheet}>
       <View style={styles.sheetHandle} />
-      {buttons.map(btn => (
+      {buttons.filter(btn => !btn.hidden).map(btn => (
         <TouchableOpacity
           key={btn.label}
           style={[
             styles.sheetBtn,
             btn.accent && styles.sheetBtnAccent,
             btn.danger && styles.sheetBtnDanger,
+            btn.disabled && styles.sheetBtnDisabled,
           ]}
-          onPress={btn.onPress}
+          onPress={btn.disabled ? undefined : btn.onPress}
+          disabled={btn.disabled}
           activeOpacity={0.7}>
           <Text
             style={[
               styles.sheetBtnText,
               btn.accent && styles.sheetBtnTextAccent,
               btn.danger && styles.sheetBtnTextDanger,
+              btn.disabled && styles.sheetBtnTextDisabled,
             ]}>
             {btn.label}
           </Text>
@@ -76,7 +79,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.Lato_Regular,
     color: BlackColor,
   },
-  sheetBtnTextAccent: {color: '#006B38', fontFamily: fonts.Lato_Bold},
+  sheetBtnDisabled: {opacity: 0.4},
+  sheetBtnTextDisabled: {color: '#999'},
   sheetBtnTextDanger: {color: '#cc0000', fontFamily: fonts.Lato_Bold},
 });
 

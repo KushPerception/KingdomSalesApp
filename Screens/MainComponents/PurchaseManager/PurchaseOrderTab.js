@@ -9,12 +9,12 @@ import {
 } from '../../../utility/colors';
 import {fonts} from '../../../utility/GlobalStyles';
 
-const PurchaseOrderTab = ({item, onPressMenu}) => {
+const PurchaseOrderTab = ({item, onPressMenu, onPress}) => {
   if (!item) return null;
   const poDate = item.PODATE ? item.PODATE.split(' ')[0] : '-';
-  console.log('[POItem] PONO =', item.PONO, '| NETAMT =', item.NETAMT, item.CURRENCY, '| DEPT =', item.DEPARTMENT, '| SUPNAME =', item.SUPNAME?.trim());
+
   return (
-    <View style={styles.poCard}>
+    <TouchableOpacity style={styles.poCard} onPress={() => onPress?.(item)} activeOpacity={0.85}>
       <View style={styles.poTopRow}>
         <Text style={styles.poNo}>{item.PONO}</Text>
         <TouchableOpacity
@@ -33,7 +33,7 @@ const PurchaseOrderTab = ({item, onPressMenu}) => {
         <Text style={[styles.poLabel, {marginLeft: 12}]}>By: <Text style={styles.poValue}>{item.ADDEDUSER}</Text></Text>
       </View>
       {!!item.REMARKS && <Text style={styles.poRemarks}>{item.REMARKS}</Text>}
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -22,11 +22,13 @@ import FilterBar from '../../CommonComponents/FilterBar';
 import QuotationTab from './QuotationTab';
 
 const SEARCH_BY_OPTIONS = ['MRNO', 'Stock Code'];
+const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected'];
 const DEFAULT_FILTERS = {
   mrno: '',
   stock_code: '',
   from_date: '',
   to_date: '',
+  status: 'pending',
 };
 
 const QuotationList = ({ navigation }) => {
@@ -38,6 +40,7 @@ const QuotationList = ({ navigation }) => {
   const [keyword, setKeyword] = useState('');
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('Pending');
 
   const [bottomSheet, setBottomSheet] = useState({ visible: false, eq: null });
   const [approveModal, setApproveModal] = useState({
@@ -55,7 +58,7 @@ const QuotationList = ({ navigation }) => {
   useEffect(() => {
     (async () => {
       tokenRef.current = await AsyncStorage.getItem('access_token');
-      search(DEFAULT_FILTERS);
+      search(buildFilters('Pending'));
     })();
   }, []);
 
@@ -63,23 +66,33 @@ const QuotationList = ({ navigation }) => {
     setExpandedIndex(prev => (prev === index ? null : index));
   };
 
-  const handleSearch = () => {
-    search({
-      mrno: searchBy === 'MRNO' ? keyword : '',
-      stock_code: searchBy === 'Stock Code' ? keyword : '',
-      from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
-      to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
-    });
+  const buildFilters = (overrideStatus) => ({
+    mrno: searchBy === 'MRNO' ? keyword : '',
+    stock_code: searchBy === 'Stock Code' ? keyword : '',
+    from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
+    to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
+    status: (overrideStatus ?? statusFilter).toLowerCase(),
+  });
+
+  const handleSearch = () => search(buildFilters());
+
+  const handleStatusChange = newStatus => {
+    setStatusFilter(newStatus);
+    search(buildFilters(newStatus));
   };
 
   const handleClear = () => {
     setKeyword('');
     setFromDate(null);
     setToDate(null);
-    search(DEFAULT_FILTERS);
+    setStatusFilter('Pending');
+    search(buildFilters('Pending'));
   };
 
-  const openSheet = eq => setBottomSheet({ visible: true, eq });
+  const openSheet = eq => {
+    console.log('[QuotationList] openSheet eq:', JSON.stringify(eq, null, 2));
+    setBottomSheet({ visible: true, eq });
+  };
   const closeSheet = () => setBottomSheet({ visible: false, eq: null });
 
   const openApproveModal = eq => {
@@ -90,11 +103,14 @@ const QuotationList = ({ navigation }) => {
 
   const handleApprove = async () => {
     const eqNo = approveModal.eq?.eq_no;
+    const dtslno = approveModal.eq?.dtslno;
+
+    console.log('[QuotationList] handleApprove eqNo:', eqNo, '| remarks:', approvalRemarks, approveModal.eq);
     setApproving(true);
     try {
-      await approveEnquiry(tokenRef.current, eqNo, approvalRemarks);
+      await approveEnquiry(tokenRef.current, eqNo, approvalRemarks, dtslno);
       closeApproveModal();
-      search(DEFAULT_FILTERS);
+      search(buildFilters());
     } catch (e) {
       console.error('[QuotationList] handleApprove error:', e.message);
     } finally {
@@ -142,7 +158,7 @@ const QuotationList = ({ navigation }) => {
     {
       label: 'MR Attach',
       onPress: () => {
-        const mrNo = bottomSheet.eq?.mr_attachment?.mr_no;
+        const mrNo = bottomSheet.eq?.mr_no;
         closeSheet();
         navigation.navigate('PMCommonScreen', {
           title: 'MR Attachments',
@@ -154,11 +170,12 @@ const QuotationList = ({ navigation }) => {
     {
       label: 'Approve',
       onPress: () => {
-        const eq = bottomSheet.eq;
+        const eq = { ...bottomSheet.eq, eq_no: bottomSheet.eq?.eq_details?.eq_no ?? bottomSheet.eq?.eq_no };
         closeSheet();
         openApproveModal(eq);
       },
       accent: true,
+      hidden: (() => { const eq = bottomSheet.eq; const s = eq?.status ?? (eq?.approved ? 'approved' : eq?.rejected ? 'rejected' : 'pending'); return s !== 'pending'; })(),
     },
   ];
 
@@ -188,6 +205,9 @@ const QuotationList = ({ navigation }) => {
         toDate={toDate}
         onChangeFromDate={setFromDate}
         onChangeToDate={setToDate}
+        statusOptions={STATUS_OPTIONS}
+        statusFilter={statusFilter}
+        onChangeStatus={handleStatusChange}
         onSearch={handleSearch}
         onClear={handleClear}
       />

@@ -4,7 +4,8 @@ const StagApiUrl = `${mainUrl}api`;
 
 const buildQuery = params =>
   Object.entries(params)
-    .map(([key, value]) => `${key}=${value ?? ''}`)
+    .filter(([, value]) => value !== '' && value != null)
+    .map(([key, value]) => `${key}=${value}`)
     .join('&');
 
 export const fetchQuotationList = async (userToken, filters, page = 1) => {
@@ -13,6 +14,7 @@ export const fetchQuotationList = async (userToken, filters, page = 1) => {
     stock_code: filters.stock_code,
     from_date: filters.from_date,
     to_date: filters.to_date,
+    status: filters.status,
     per_page: 20,
     page,
   });
@@ -30,18 +32,21 @@ export const fetchQuotationList = async (userToken, filters, page = 1) => {
         JSON.stringify(json),
     );
   }
-  return { items: json.data?.data ?? [], lastPage: json.data?.last_page ?? 1 };
+  const items = (json.data?.data ?? []).sort((a, b) => b.mr_no?.localeCompare(a.mr_no, undefined, { numeric: true }));
+  return { items, lastPage: json.data?.last_page ?? 1 };
 };
 
-export const approveEnquiry = async (userToken, eqNo, remarks) => {
-  const url = `${StagApiUrl}/enquiry/${eqNo}/approve`;
+export const approveEnquiry = async (userToken, eqNo, remarks, dtslno) => {
+  console.log('[EnquiryApi] approveEnquiry called with eqNo:', eqNo, '| remarks:', remarks, '| dtslno:', dtslno);
+  const url = `${StagApiUrl}/enquiry/${dtslno}/approve`;
+  console.log('[EnquiryApi] Sending POST request to URL:', url, '| with body:', { approval_remarks: remarks });
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: 'Bearer ' + userToken,
     },
-    body: JSON.stringify({ approval_remarks: remarks }),
+    body: JSON.stringify({eqno:eqNo, approval_remarks: remarks }),
   });
   const json = await response.json();
   if (response.status !== 200 && response.status !== 201) {

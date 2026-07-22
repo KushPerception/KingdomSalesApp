@@ -57,6 +57,28 @@ const FilterBar = ({
         </TouchableOpacity>
       </View>
 
+      <View style={styles.searchRow}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setShowDropdown(true)}
+        >
+          <Text style={styles.dropdownButtonText}>{searchBy}</Text>
+          <Text style={styles.dropdownArrow}>▾</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={styles.searchInput}
+          placeholder={`Search by ${searchBy}`}
+          value={keyword}
+          onChangeText={onChangeKeyword}
+        />
+        <TouchableOpacity onPress={onSearch} style={styles.searchButton}>
+          <Image source={searchIcon} style={styles.searchIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onClear} style={styles.clearButton}>
+          <Text style={styles.clearButtonText}>Clear</Text>
+        </TouchableOpacity>
+      </View>
+
       {!!statusOptions && (
         <View style={styles.statusRow}>
           {statusOptions.map(option => (
@@ -80,28 +102,6 @@ const FilterBar = ({
           ))}
         </View>
       )}
-
-      <View style={styles.searchRow}>
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={() => setShowDropdown(true)}
-        >
-          <Text style={styles.dropdownButtonText}>{searchBy}</Text>
-          <Text style={styles.dropdownArrow}>▾</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.searchInput}
-          placeholder={`Search by ${searchBy}`}
-          value={keyword}
-          onChangeText={onChangeKeyword}
-        />
-        <TouchableOpacity onPress={onSearch} style={styles.searchButton}>
-          <Image source={searchIcon} style={styles.searchIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onClear} style={styles.clearButton}>
-          <Text style={styles.clearButtonText}>Clear</Text>
-        </TouchableOpacity>
-      </View>
 
       <Modal
         transparent
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   statusRow: {
     flexDirection: 'row',
     marginHorizontal: 10,
-    marginTop: 10,
+    marginBottom: 10,
     gap: 8,
   },
   statusChip: {
