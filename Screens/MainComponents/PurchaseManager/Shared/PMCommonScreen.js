@@ -652,6 +652,7 @@ const EqDetailsView = ({ data, onAttachPress }) => {
                   <Text style={[styles.hCol, styles.colHeader]}>
                     Enquiry Type
                   </Text>
+                  <Text style={[styles.hCol, styles.colHeader]}>Amount</Text>
                 </View>
                 {item.enquiries.map((eq, j) => (
                   <View
@@ -673,6 +674,9 @@ const EqDetailsView = ({ data, onAttachPress }) => {
                     </Text>
                     <Text style={styles.hCol}>
                       {eq.ENQTYPE ?? eq.enquiry_type ?? '-'}
+                    </Text>
+                    <Text style={styles.hCol}>
+                      {eq.AMOUNT ?? eq.amount ?? '-'}
                     </Text>
                   </View>
                 ))}
