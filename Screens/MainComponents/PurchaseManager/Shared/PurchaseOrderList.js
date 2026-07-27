@@ -23,7 +23,7 @@ import FilterBar from '../../../CommonComponents/FilterBar';
 import PurchaseOrderTab from './PurchaseOrderTab';
 
 const SEARCH_BY_OPTIONS = ['PONO', 'Department', 'Supplier'];
-const STATUS_OPTIONS = ['All', 'Approved', 'Rejected'];
+const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected'];
 const DEFAULT_FILTERS = {
   pono: '',
   department: '',
@@ -32,6 +32,7 @@ const DEFAULT_FILTERS = {
   to_date: '',
   approved_only: '',
   rejected_only: '',
+  pending_only: '',
 };
 
 const PurchaseOrderList = ({ navigation }) => {
@@ -41,7 +42,7 @@ const PurchaseOrderList = ({ navigation }) => {
   const [keyword, setKeyword] = useState('');
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Pending');
 
   const [poBottomSheet, setPOBottomSheet] = useState({
     visible: false,
@@ -63,33 +64,45 @@ const PurchaseOrderList = ({ navigation }) => {
   useEffect(() => {
     (async () => {
       tokenRef.current = await AsyncStorage.getItem('access_token');
-      search(DEFAULT_FILTERS);
+      console.log('[PurchaseOrderList] Init — loading pending orders');
+      search({ ...DEFAULT_FILTERS, pending_only: 1 });
     })();
   }, []);
 
-  const buildFilters = overrideStatus => ({
-    pono: searchBy === 'PONO' ? keyword : '',
-    department: searchBy === 'Department' ? keyword : '',
-    supname: searchBy === 'Supplier' ? keyword : '',
-    from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
-    to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
-    approved_only: (overrideStatus ?? statusFilter) === 'Approved' ? 1 : '',
-    rejected_only: (overrideStatus ?? statusFilter) === 'Rejected' ? 1 : '',
-  });
+  const buildFilters = overrideStatus => {
+    const status = overrideStatus ?? statusFilter;
+    const filters = {
+      pono: searchBy === 'PONO' ? keyword : '',
+      department: searchBy === 'Department' ? keyword : '',
+      supname: searchBy === 'Supplier' ? keyword : '',
+      from_date: fromDate ? moment(fromDate).format('YYYY-MM-DD') : '',
+      to_date: toDate ? moment(toDate).format('YYYY-MM-DD') : '',
+      approved_only: status === 'Approved' ? 1 : '',
+      rejected_only: status === 'Rejected' ? 1 : '',
+      pending_only: status === 'Pending' ? 1 : '',
+    };
+    console.log('[PurchaseOrderList] buildFilters →', filters);
+    return filters;
+  };
 
-  const handleSearch = () => search(buildFilters());
+  const handleSearch = () => {
+    console.log('[PurchaseOrderList] Search triggered — searchBy:', searchBy, '| keyword:', keyword, '| status:', statusFilter);
+    search(buildFilters());
+  };
 
   const handleStatusChange = newStatus => {
+    console.log('[PurchaseOrderList] Status changed →', newStatus);
     setStatusFilter(newStatus);
     search(buildFilters(newStatus));
   };
 
   const handleClear = () => {
+    console.log('[PurchaseOrderList] Filters cleared — resetting to Pending');
     setKeyword('');
     setFromDate(null);
     setToDate(null);
-    setStatusFilter('All');
-    search(DEFAULT_FILTERS);
+    setStatusFilter('Pending');
+    search({ ...DEFAULT_FILTERS, pending_only: 1 });
   };
 
   const openPOSheet = po => setPOBottomSheet({ visible: true, po });
@@ -102,9 +115,11 @@ const PurchaseOrderList = ({ navigation }) => {
     try {
       const action =
         mode === 'reject' ? rejectPurchaseOrder : approvePurchaseOrder;
+      console.log(`[PurchaseOrderList] PO action — mode: ${mode} | PONO: ${poNo}`);
       await action(tokenRef.current, poNo, poActionRemarks);
+      console.log('[PurchaseOrderList] PO action success — refreshing list');
       setPOActionModal({ visible: false, po: null, mode: 'approve' });
-      search(DEFAULT_FILTERS);
+      search(buildFilters());
     } catch (e) {
       console.error('[PurchaseOrderList] handlePOAction error:', e.message);
     } finally {
@@ -139,18 +154,6 @@ const PurchaseOrderList = ({ navigation }) => {
             title: 'MR Details',
             apiUrl: `${mainUrl}api/purchase-order/${poNo}/mr-details`,
             isMrDetails: true,
-          });
-        },
-      },
-      {
-        label: 'MR Attach',
-        onPress: () => {
-          const mrNo = poBottomSheet.po?.mr_attachment?.mr_no;
-          closePOSheet();
-          navigation.navigate('PMCommonScreen', {
-            title: 'MR Attachments',
-            apiUrl: `${mainUrl}api/material-request/${mrNo}/attachments`,
-            isDetail: false,
           });
         },
       },

@@ -122,7 +122,7 @@ const QuotationList = ({ navigation }) => {
         navigation.navigate('PMCommonScreen', {
           title: 'Enquiry Details',
           apiUrl: `${mainUrl}api/enquiry/${eqNo}/detail`,
-          isDetail: true,
+          isEnqDetail: true,
         });
       },
     },

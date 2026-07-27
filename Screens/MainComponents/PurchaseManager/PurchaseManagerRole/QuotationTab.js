@@ -83,7 +83,7 @@ const QuotationTab = ({
                       );
                     })()}
                     <TouchableOpacity
-                      onPress={() => onPressMenu(eq)}
+                      onPress={() => onPressMenu({ ...eq, mr_no: item.mr_no })}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Text style={styles.threeDot}>⋮</Text>

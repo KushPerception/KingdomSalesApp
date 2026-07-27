@@ -284,6 +284,71 @@ const PODetailView = ({ data }) => {
   );
 };
 
+const EQ_DETAIL_FIELDS = [
+  { key: 'EQNO', label: 'EQ No' },
+  { key: 'ENQDATE', label: 'ENQ Date' },
+  { key: 'SUPNAME', label: 'Supplier Name' },
+  { key: 'added_by', label: 'Added By' },
+  { key: 'ADDDATETIME', label: 'Add Date Time' },
+  { key: 'ENQTYPE', label: 'ENQ Type' },
+];
+
+// ─── Enquiry Detail renderer — shows only specified fields + items table ──────
+const EnqDetailView = ({ data }) => {
+  if (!data) return null;
+  const arrays = Object.entries(data).filter(([, v]) => Array.isArray(v));
+  return (
+    <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.paddedCard}>
+        {EQ_DETAIL_FIELDS.map(({ key, label }) =>
+          data[key] != null && data[key] !== '' ? (
+            <Row key={key} label={label} value={data[key]} />
+          ) : null,
+        )}
+      </View>
+      {arrays.map(([key, arr]) => {
+        if (!arr.length) return null;
+        const cols = Object.keys(arr[0] ?? {}).filter(
+          ck =>
+            !Array.isArray(arr[0][ck]) &&
+            typeof arr[0][ck] !== 'object' &&
+            !MR_HIDDEN_FIELDS.has(ck) &&
+            !ITEMS_STATUS_HIDDEN.has(ck),
+        );
+        return (
+          <View key={key}>
+            <Text style={styles.sectionTitle}>
+              {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+            </Text>
+            <View style={styles.card}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                  <View style={styles.tableHeader}>
+                    {cols.map(c => (
+                      <Text key={c} style={[styles.hCol, styles.colHeader]}>
+                        {c.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())}
+                      </Text>
+                    ))}
+                  </View>
+                  {arr.map((subItem, i) => (
+                    <View key={i} style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}>
+                      {cols.map(c => (
+                        <Text key={c} style={styles.hCol}>
+                          {subItem[c] != null ? String(subItem[c]) : '-'}
+                        </Text>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+};
+
 // ─── Detail renderer — renders every key/value from the data object ───────────
 const DetailView = ({ data }) => {
   if (!data) return null;
@@ -401,6 +466,15 @@ const MR_HIDDEN_FIELDS = new Set([
   'SLNO',
   'SL No',
   'DTSL',
+  'STATUS',
+  'approved',
+  'APPROVED',
+  'rejected',
+  'REJECTED',
+  'cancel',
+  'CANCEL',
+  'cancelled',
+  'CANCELLED',
 ]);
 const ITEMS_STATUS_HIDDEN = new Set([
   'approved',
@@ -411,7 +485,7 @@ const ITEMS_STATUS_HIDDEN = new Set([
 ]);
 
 // ─── MR Details renderer ─────────────────────────────────────────────────────
-const MrDetailsView = ({ data }) => {
+const MrDetailsView = ({ data, navigation }) => {
   const [expandedKey, setExpandedKey] = useState(null);
 
   if (!data?.length) {
@@ -430,6 +504,7 @@ const MrDetailsView = ({ data }) => {
     const arrays = Object.entries(item).filter(
       ([, v]) => Array.isArray(v) && v.length > 0,
     );
+    const mrNo = item.MRNO ?? item.mrno ?? item.mr_no;
 
     return (
       <View style={styles.card}>
@@ -444,6 +519,21 @@ const MrDetailsView = ({ data }) => {
               value={v}
             />
           ))}
+          {!!mrNo && (
+            <TouchableOpacity
+              style={styles.mrAttachBtn}
+              onPress={() =>
+                navigation.push('PMCommonScreen', {
+                  title: 'MR Attachments',
+                  apiUrl: `${mainUrl}api/material-request/${mrNo}/attachments`,
+                  isDetail: false,
+                })
+              }
+              activeOpacity={0.75}
+            >
+              <Text style={styles.mrAttachBtnText}>📎 MR Attachments</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Each array section has its own expand toggle */}
@@ -606,7 +696,7 @@ const EqDetailsView = ({ data, onAttachPress }) => {
 
 // ─── Common Screen ────────────────────────────────────────────────────────────
 const PMCommonScreen = props => {
-  const { title, apiUrl, isDetail, isEqDetails, isMrDetails, isPODetail } =
+  const { title, apiUrl, isDetail, isEnqDetail, isEqDetails, isMrDetails, isPODetail } =
     props.route?.params ?? {};
 
   const [data, setData] = useState(null);
@@ -669,7 +759,7 @@ const PMCommonScreen = props => {
         }
 
         setData(
-          isPODetail || isDetail || isEqDetails || isMrDetails
+          isPODetail || isDetail || isEnqDetail || isEqDetails || isMrDetails
             ? json.data
             : json.data ?? [],
         );
@@ -704,9 +794,11 @@ const PMCommonScreen = props => {
       ) : isPODetail ? (
         <PODetailView data={data} />
       ) : isMrDetails ? (
-        <MrDetailsView data={data} />
+        <MrDetailsView data={data} navigation={props.navigation} />
       ) : isEqDetails ? (
         <EqDetailsView data={data} onAttachPress={onAttachPress} />
+      ) : isEnqDetail ? (
+        <EnqDetailView data={data} />
       ) : isDetail ? (
         <DetailView data={data} />
       ) : (
@@ -1016,7 +1108,21 @@ const styles = StyleSheet.create({
   },
   approved: { color: '#006B38' },
   rejected: { color: '#cc0000' },
-  attachIcon: { fontSize: 15, lineHeight: 20 },
+  mrAttachBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    backgroundColor: '#f0ebff',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: primaryColor,
+  },
+  mrAttachBtnText: {
+    fontSize: 12,
+    fontFamily: fonts.Lato_Bold,
+    color: primaryColor,
+  },
 });
 
 export default PMCommonScreen;
