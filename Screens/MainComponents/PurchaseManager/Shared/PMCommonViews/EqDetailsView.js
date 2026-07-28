@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   darkGreyTextColor,
   lightGreyTextColor,
@@ -65,6 +65,7 @@ const EqDetailsView = ({ data }) => {
 // Fixed-column table for an EQ's enquiries — columns come from EQ_COLUMNS
 // rather than the data itself, since the field names vary by source.
 const ArrayTable = ({ rows }) => (
+  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
   <View>
     <View style={sharedStyles.tableHeader}>
       {EQ_COLUMNS.map(c => (
@@ -86,6 +87,7 @@ const ArrayTable = ({ rows }) => (
       </View>
     ))}
   </View>
+  </ScrollView>
 );
 
 const styles = StyleSheet.create({
