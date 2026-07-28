@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import HeaderComponent from '../../../CommonComponents/Header';
-import AttachmentImageViewer from '../../../CommonComponents/AttachmentImageViewer';
+import AttachmentsList from '../../../CommonComponents/AttachmentsList';
 import { mainUrl } from '../../../../utility/ApiHelpers/StagingApis';
 import {
   BlackColor,
@@ -326,12 +326,20 @@ const EnqDetailView = ({ data }) => {
                   <View style={styles.tableHeader}>
                     {cols.map(c => (
                       <Text key={c} style={[styles.hCol, styles.colHeader]}>
-                        {c.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())}
+                        {c
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, ch => ch.toUpperCase())}
                       </Text>
                     ))}
                   </View>
                   {arr.map((subItem, i) => (
-                    <View key={i} style={[styles.tableRow, i % 2 === 0 && styles.tableRowAlt]}>
+                    <View
+                      key={i}
+                      style={[
+                        styles.tableRow,
+                        i % 2 === 0 && styles.tableRowAlt,
+                      ]}
+                    >
                       {cols.map(c => (
                         <Text key={c} style={styles.hCol}>
                           {subItem[c] != null ? String(subItem[c]) : '-'}
@@ -421,39 +429,6 @@ const DetailView = ({ data }) => {
           </View>
         );
       })}
-    </ScrollView>
-  );
-};
-
-// ─── Attachments renderer ─────────────────────────────────────────────────────
-const AttachmentsView = ({ data }) => {
-  if (!data?.length) {
-    return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>No attachments found.</Text>
-      </View>
-    );
-  }
-  return (
-    <ScrollView contentContainerStyle={styles.content}>
-      {data.map((att, i) => (
-        <View key={i} style={styles.attachCard}>
-          <Text style={styles.attachName} numberOfLines={1}>
-            {att.ATTACHNAME}
-          </Text>
-          <Text style={styles.attachMeta}>
-            {att.ATTACHDATE?.split(' ')[0]}
-            {att.ATTACHSIZE
-              ? ` · ${(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB`
-              : ''}
-          </Text>
-          {att.ATTACHFILE && (
-            <View style={{ marginTop: 8 }}>
-              <AttachmentImageViewer attachment={att} />
-            </View>
-          )}
-        </View>
-      ))}
     </ScrollView>
   );
 };
@@ -696,8 +671,15 @@ const EqDetailsView = ({ data, onAttachPress }) => {
 
 // ─── Common Screen ────────────────────────────────────────────────────────────
 const PMCommonScreen = props => {
-  const { title, apiUrl, isDetail, isEnqDetail, isEqDetails, isMrDetails, isPODetail } =
-    props.route?.params ?? {};
+  const {
+    title,
+    apiUrl,
+    isDetail,
+    isEnqDetail,
+    isEqDetails,
+    isMrDetails,
+    isPODetail,
+  } = props.route?.params ?? {};
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -749,10 +731,6 @@ const PMCommonScreen = props => {
 
         console.log('[PMCommonScreen] response status =', res.status);
         const json = await res.json();
-        console.log(
-          '[PMCommonScreen] response body =',
-          JSON.stringify(json, null, 2),
-        );
 
         if (res.status !== 200) {
           throw new Error(json?.message ?? 'Request failed: ' + res.status);
@@ -802,7 +780,7 @@ const PMCommonScreen = props => {
       ) : isDetail ? (
         <DetailView data={data} />
       ) : (
-        <AttachmentsView data={data} />
+        <AttachmentsList data={data} />
       )}
     </View>
   );
@@ -847,26 +825,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  attachCard: {
-    backgroundColor: whiteColor,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: primaryColor,
-  },
-  attachName: {
-    fontSize: 13,
-    fontFamily: fonts.Lato_Bold,
-    color: BlackColor,
-  },
-  attachMeta: {
-    fontSize: 11,
-    fontFamily: fonts.Lato_Regular,
-    color: lightGreyTextColor,
-    marginTop: 2,
   },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },

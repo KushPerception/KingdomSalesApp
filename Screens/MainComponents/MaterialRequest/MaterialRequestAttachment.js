@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect } from 'react';
 import {
   Alert,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,6 +19,10 @@ import {
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { BlackColor, primaryColor } from '../../../utility/colors';
 import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
+import {
+  AttachmentRow,
+  formatFileSizeKB,
+} from '../../CommonComponents/AttachmentsList';
 import HeaderComponent from '../../CommonComponents/Header';
 import {
   submitMaterialRequest,
@@ -259,108 +263,101 @@ const MaterialRequestAttachment = props => {
         onBackPress={() => props.navigation.goBack()}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {fetchingExisting && (
-          <ActivityIndicator
-            color={primaryColor}
-            style={{ marginVertical: 16 }}
-          />
+      <FlatList
+        data={existingAttachments}
+        keyExtractor={(_, i) => `existing-${i}`}
+        contentContainerStyle={styles.content}
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
+        windowSize={5}
+        removeClippedSubviews
+        renderItem={({ item: att }) => (
+          <AttachmentRow attachment={att} accentColor="#27ae60" />
         )}
-
-        {existingAttachments.length > 0 && (
+        ListHeaderComponent={
           <>
-            <Text style={styles.sectionLabel}>Existing Attachments</Text>
-            {existingAttachments.map((att, idx) => (
-              <View
-                key={`existing-${idx}`}
-                style={[styles.fileCard, { borderLeftColor: '#27ae60' }]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.fileName} numberOfLines={1}>
-                    {att.ATTACHNAME}
-                  </Text>
-                  <Text style={styles.fileSize}>
-                    {att.ATTACHDATE?.split(' ')[0]} ·{' '}
-                    {(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB
-                  </Text>
-                  {att.ATTACHFILE ? (
-                    <View style={{ marginTop: 8 }}>
-                      <AttachmentImageViewer attachment={att} />
-                    </View>
-                  ) : null}
-                </View>
-              </View>
-            ))}
+            {fetchingExisting && (
+              <ActivityIndicator
+                color={primaryColor}
+                style={{ marginVertical: 16 }}
+              />
+            )}
+            {existingAttachments.length > 0 && (
+              <Text style={styles.sectionLabel}>Existing Attachments</Text>
+            )}
           </>
-        )}
+        }
+        ListFooterComponent={
+          <>
+            {(existingAttachments.length > 0 || isEdit) && (
+              <Text style={styles.sectionLabel}>New Attachments</Text>
+            )}
 
-        {(existingAttachments.length > 0 || isEdit) && (
-          <Text style={styles.sectionLabel}>New Attachments</Text>
-        )}
-
-        {files.length === 0 && !isEdit ? (
-          <Text style={styles.emptyText}>No attachments added</Text>
-        ) : files.length === 0 && isEdit ? null : (
-          files.map((file, idx) => (
-            <View key={idx} style={styles.fileCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fileName} numberOfLines={1}>
-                  {file.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.fileSize,
-                    file.uploading && { color: '#f39c12' },
-                    file.error && { color: '#e74c3c' },
-                  ]}
-                >
-                  {file.uploading
-                    ? 'Uploading...'
-                    : file.uploaded
-                    ? `${(file.size / 1024).toFixed(1)} KB ✓`
-                    : file.error
-                    ? 'Upload failed ✗'
-                    : `${(file.size / 1024).toFixed(1)} KB`}
-                </Text>
-                <View style={{ marginTop: 8 }}>
-                  <AttachmentImageViewer attachment={file} />
+            {files.length === 0 && !isEdit ? (
+              <Text style={styles.emptyText}>No attachments added</Text>
+            ) : files.length === 0 && isEdit ? null : (
+              files.map((file, idx) => (
+                <View key={idx} style={styles.fileCard}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fileName} numberOfLines={1}>
+                      {file.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.fileSize,
+                        file.uploading && { color: '#f39c12' },
+                        file.error && { color: '#e74c3c' },
+                      ]}
+                    >
+                      {file.uploading
+                        ? 'Uploading...'
+                        : file.uploaded
+                        ? `${formatFileSizeKB(file.size)} ✓`
+                        : file.error
+                        ? 'Upload failed ✗'
+                        : formatFileSizeKB(file.size)}
+                    </Text>
+                    <View style={{ marginTop: 8 }}>
+                      <AttachmentImageViewer attachment={file} />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => removeFile(idx)}
+                    style={styles.removeBtn}
+                    disabled={loading}
+                  >
+                    <Text style={styles.removeBtnText}>✕</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <TouchableOpacity
-                onPress={() => removeFile(idx)}
-                style={styles.removeBtn}
-                disabled={loading}
-              >
-                <Text style={styles.removeBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))
-        )}
+              ))
+            )}
 
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={showPickerOptions}
-          disabled={loading}
-        >
-          <Text style={styles.addBtnText}>+ Add Attachment</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={showPickerOptions}
+              disabled={loading}
+            >
+              <Text style={styles.addBtnText}>+ Add Attachment</Text>
+            </TouchableOpacity>
 
-        <Text style={styles.hint}>
-          Allowed: pdf, jpg, jpeg, png, docx, xlsx, xls · Max 10MB each
-        </Text>
+            <Text style={styles.hint}>
+              Allowed: pdf, jpg, jpeg, png, docx, xlsx, xls · Max 10MB each
+            </Text>
 
-        <TouchableOpacity
-          style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.submitBtnText}>SUBMIT</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+            <TouchableOpacity
+              style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.submitBtnText}>SUBMIT</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        }
+      />
     </View>
   );
 };

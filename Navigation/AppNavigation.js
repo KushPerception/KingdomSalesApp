@@ -75,6 +75,10 @@ const AppNavigator = () => {
         ]);
         return true;
       }
+      if (navigationRef.current?.canGoBack()) {
+        navigationRef.current.goBack();
+        return true;
+      }
       return false;
     };
 

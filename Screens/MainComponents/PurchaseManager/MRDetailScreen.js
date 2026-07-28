@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import HeaderComponent from '../../CommonComponents/Header';
-import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
+import AttachmentsList from '../../CommonComponents/AttachmentsList';
 import {
   getMaterialRequestDetail,
   getMaterialRequestAttachments,
@@ -66,41 +66,6 @@ const DetailView = ({ data }) => {
   );
 };
 
-// ─── Attachments View ─────────────────────────────────────────────────────────
-const AttachmentsView = ({ data }) => {
-  if (!data?.length) {
-    return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>No attachments found.</Text>
-      </View>
-    );
-  }
-  return (
-    <ScrollView contentContainerStyle={styles.content}>
-      {data.map((att, i) => (
-        <View key={i} style={styles.attachCard}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.attachName} numberOfLines={1}>
-              {att.ATTACHNAME}
-            </Text>
-            <Text style={styles.attachMeta}>
-              {att.ATTACHDATE?.split(' ')[0]} ·{' '}
-              {att.ATTACHSIZE
-                ? `${(parseInt(att.ATTACHSIZE, 10) / 1024).toFixed(1)} KB`
-                : ''}
-            </Text>
-            {att.ATTACHFILE && (
-              <View style={{ marginTop: 8 }}>
-                <AttachmentImageViewer attachment={att} />
-              </View>
-            )}
-          </View>
-        </View>
-      ))}
-    </ScrollView>
-  );
-};
-
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const MRDetailScreen = props => {
   const { mrNo, type } = props.route?.params ?? {};
@@ -123,10 +88,6 @@ const MRDetailScreen = props => {
         const res = isDetail
           ? await getMaterialRequestDetail(token, mrNo)
           : await getMaterialRequestAttachments(token, mrNo);
-        console.log(
-          '[MRDetailScreen] API response =',
-          JSON.stringify(res, null, 2),
-        );
         setData(isDetail ? res.data : res.data ?? []);
       } catch (e) {
         console.error('[MRDetailScreen] error =', e.message);
@@ -158,7 +119,7 @@ const MRDetailScreen = props => {
       ) : isDetail ? (
         <DetailView data={data} />
       ) : (
-        <AttachmentsView data={data} />
+        <AttachmentsList data={data} />
       )}
     </View>
   );
@@ -203,26 +164,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  attachCard: {
-    backgroundColor: whiteColor,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: primaryColor,
-  },
-  attachName: {
-    fontSize: 13,
-    fontFamily: fonts.Lato_Bold,
-    color: BlackColor,
-  },
-  attachMeta: {
-    fontSize: 11,
-    fontFamily: fonts.Lato_Regular,
-    color: lightGreyTextColor,
-    marginTop: 2,
   },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
