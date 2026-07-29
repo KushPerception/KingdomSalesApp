@@ -119,7 +119,7 @@ const MRDetailScreen = props => {
       ) : isDetail ? (
         <DetailView data={data} />
       ) : (
-        <AttachmentsList data={data} />
+        <AttachmentsList data={data} attachmentModule="material-request" />
       )}
     </View>
   );

@@ -14,10 +14,17 @@ export const formatFileSizeKB = bytes => {
   return Number.isFinite(n) ? `${(n / 1024).toFixed(1)} KB` : null;
 };
 
+// Attachments fetched from the API no longer carry their file content inline
+// — the list endpoint returns metadata only (name/date/size/SLN0), and the
+// actual Base64 is fetched lazily per-attachment via `attachmentModule` +
+// SLN0 (see AttachmentImageViewer / utility/ApiHelpers/AttachmentsApi).
+const hasPreviewableFile = attachment =>
+  !!(attachment.ATTACHFILE || attachment.SLN0 || attachment.SLNO);
+
 // One attachment card: name, "date · size" meta line, and an inline preview
 // (image thumbnail or document tile). Used for every screen that lists
-// attachments fetched from the API (ATTACHNAME/ATTACHDATE/ATTACHSIZE/ATTACHFILE).
-export const AttachmentRow = ({ attachment, accentColor, style }) => (
+// attachments fetched from the API.
+export const AttachmentRow = ({ attachment, accentColor, style, attachmentModule }) => (
   <View
     style={[
       styles.card,
@@ -37,25 +44,28 @@ export const AttachmentRow = ({ attachment, accentColor, style }) => (
           .filter(Boolean)
           .join(' · ')}
       </Text>
-      {attachment.ATTACHFILE && (
+      {hasPreviewableFile(attachment) && (
         <View style={styles.preview}>
-          <AttachmentImageViewer attachment={attachment} />
+          <AttachmentImageViewer
+            attachment={attachment}
+            attachmentModule={attachmentModule}
+          />
         </View>
       )}
     </View>
   </View>
 );
 
-const renderItem = ({ item }) => <AttachmentRow attachment={item} />;
-
 // Standalone virtualized attachment list with the standard empty state. Use
 // this when a screen shows nothing but the attachments (no extra
 // header/footer content); otherwise render <AttachmentRow> inside your own
-// FlatList.
+// FlatList. `attachmentModule` selects which module's file endpoint to call
+// (e.g. "material-request", "purchase-order", "enquiry").
 const AttachmentsList = ({
   data,
   emptyText = 'No attachments found.',
   contentContainerStyle,
+  attachmentModule,
 }) => {
   if (!data?.length) {
     return (
@@ -68,7 +78,9 @@ const AttachmentsList = ({
     <FlatList
       data={data}
       keyExtractor={(_, i) => String(i)}
-      renderItem={renderItem}
+      renderItem={({ item }) => (
+        <AttachmentRow attachment={item} attachmentModule={attachmentModule} />
+      )}
       contentContainerStyle={contentContainerStyle ?? styles.content}
       initialNumToRender={4}
       maxToRenderPerBatch={4}

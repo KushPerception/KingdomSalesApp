@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import RNBlobUtil from 'react-native-blob-util';
+import { getAttachmentFile } from '../../utility/ApiHelpers/AttachmentsApi';
 import { primaryColor } from '../../utility/colors';
 
 const FILE_CONFIG = {
@@ -52,7 +53,11 @@ const getConfig = ext => {
 };
 
 // ─── Document Tile ────────────────────────────────────────────────────────────
-const DocumentTile = memo(({ name, ext, base64, localUri }) => {
+// Documents never fetch anything until the user actually taps to open one —
+// at that point we get the Base64 content either from the `base64` prop
+// (already known) or, for API-listed attachments, by calling the
+// per-attachment file endpoint with its `slno`.
+const DocumentTile = memo(({ name, ext, base64, localUri, slno, attachmentModule }) => {
   const config = getConfig(ext);
   const [opening, setOpening] = useState(false);
 
@@ -71,16 +76,25 @@ const DocumentTile = memo(({ name, ext, base64, localUri }) => {
         } else {
           await RNBlobUtil.ios.openDocument(src);
         }
-      } else if (base64) {
-        // existing file — write Base64 to cache then open
-        await RNBlobUtil.fs.writeFile(destPath, base64, 'base64');
-        if (Platform.OS === 'android') {
-          await RNBlobUtil.android.actionViewIntent(destPath, config.mime);
-        } else {
-          await RNBlobUtil.ios.openDocument(destPath);
-        }
-      } else {
+        return;
+      }
+
+      const data =
+        base64 ??
+        (slno && attachmentModule
+          ? await getAttachmentFile(attachmentModule, slno)
+          : null);
+
+      if (!data) {
         Alert.alert('Unavailable', 'File data is not available.');
+        return;
+      }
+
+      await RNBlobUtil.fs.writeFile(destPath, data, 'base64');
+      if (Platform.OS === 'android') {
+        await RNBlobUtil.android.actionViewIntent(destPath, config.mime);
+      } else {
+        await RNBlobUtil.ios.openDocument(destPath);
       }
     } catch {
       Alert.alert(
@@ -90,7 +104,7 @@ const DocumentTile = memo(({ name, ext, base64, localUri }) => {
     } finally {
       setOpening(false);
     }
-  }, [base64, localUri, ext, config]);
+  }, [base64, localUri, ext, config, slno, attachmentModule]);
 
   return (
     <TouchableOpacity
@@ -124,7 +138,7 @@ const DocumentTile = memo(({ name, ext, base64, localUri }) => {
 // cache file once and pointing <Image> at the file:// path instead lets the
 // native layer read/decode it directly, which is significantly faster and
 // also lets repeat views of the same attachment skip the write entirely.
-const ImageTile = memo(({ ext, base64, localUri, cacheKey }) => {
+const ImageTile = memo(({ ext, base64, localUri, slno, attachmentModule, cacheKey }) => {
   const normalizedLocalUri = localUri
     ? localUri.startsWith('file://')
       ? localUri
@@ -137,7 +151,8 @@ const ImageTile = memo(({ ext, base64, localUri, cacheKey }) => {
   const [fullScreen, setFullScreen] = useState(false);
 
   useEffect(() => {
-    if (normalizedLocalUri || !base64) return;
+    if (normalizedLocalUri) return;
+    if (!base64 && !(slno && attachmentModule)) return;
     let cancelled = false;
     setLoading(true);
     const extClean = ext?.replace('.', '') ?? 'img';
@@ -151,7 +166,13 @@ const ImageTile = memo(({ ext, base64, localUri, cacheKey }) => {
       try {
         const exists = await RNBlobUtil.fs.exists(destPath);
         if (!exists) {
-          await RNBlobUtil.fs.writeFile(destPath, base64, 'base64');
+          // Cache miss: use the already-known Base64 if we have it, or
+          // fetch this one attachment's file lazily (only visible tiles
+          // trigger a fetch — see FlatList virtualization upstream).
+          const data =
+            base64 ?? (await getAttachmentFile(attachmentModule, slno));
+          if (!data) throw new Error('No attachment data');
+          await RNBlobUtil.fs.writeFile(destPath, data, 'base64');
         }
         if (!cancelled) setUri(`file://${destPath}`);
       } catch {
@@ -165,7 +186,7 @@ const ImageTile = memo(({ ext, base64, localUri, cacheKey }) => {
     return () => {
       cancelled = true;
     };
-  }, [base64, normalizedLocalUri, ext, cacheKey]);
+  }, [base64, normalizedLocalUri, ext, cacheKey, slno, attachmentModule]);
 
   const handleLoad = useCallback(() => setLoading(false), []);
   const handleError = useCallback(() => {
@@ -238,10 +259,12 @@ const ImageTile = memo(({ ext, base64, localUri, cacheKey }) => {
 });
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-// Accepts two shapes:
-//   existing attachment: { ATTACHFILE, ATTACHEXT, ATTACHNAME }
-//   new local file:      { uri, name, type }   (from picker)
-const AttachmentImageViewer = memo(({ attachment }) => {
+// Accepts three shapes:
+//   API attachment (metadata-only list): { SLN0, ATTACHEXT, ATTACHNAME, ... }
+//     — Base64 content is fetched lazily via `attachmentModule` + SLN0.
+//   API attachment (legacy, inline):     { ATTACHFILE, ATTACHEXT, ATTACHNAME }
+//   new local file (from picker):        { uri, name, type }
+const AttachmentImageViewer = memo(({ attachment, attachmentModule }) => {
   if (!attachment) return null;
 
   // normalise both shapes into common fields
@@ -251,6 +274,7 @@ const AttachmentImageViewer = memo(({ attachment }) => {
   const name = attachment.ATTACHNAME ?? attachment.name ?? '';
   const base64 = attachment.ATTACHFILE ?? null;
   const localUri = attachment.uri ?? null;
+  const slno = attachment.SLN0 ?? attachment.SLNO ?? null;
 
   const config = getConfig(ext);
   if (!config) return null;
@@ -264,10 +288,19 @@ const AttachmentImageViewer = memo(({ attachment }) => {
       ext={ext}
       base64={base64}
       localUri={localUri}
+      slno={slno}
+      attachmentModule={attachmentModule}
       cacheKey={cacheKey}
     />
   ) : (
-    <DocumentTile name={name} ext={ext} base64={base64} localUri={localUri} />
+    <DocumentTile
+      name={name}
+      ext={ext}
+      base64={base64}
+      localUri={localUri}
+      slno={slno}
+      attachmentModule={attachmentModule}
+    />
   );
 });
 
