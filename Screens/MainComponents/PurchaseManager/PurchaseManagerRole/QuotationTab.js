@@ -15,15 +15,7 @@ import {
 } from '../../../../utility/colors';
 import { fonts } from '../../../../utility/GlobalStyles';
 
-const QuotationTab = ({
-  item,
-  index,
-  expandedIndex,
-  onToggle,
-  onPressMenu,
-}) => {
-  const isExpanded = expandedIndex === index;
-
+const QuotationTab = ({ item, index, isExpanded, onToggle, onPressMenu }) => {
   return (
     <View style={styles.card}>
       <TouchableOpacity
@@ -179,4 +171,4 @@ const styles = StyleSheet.create({
   rejected: { color: '#cc0000' },
 });
 
-export default QuotationTab;
+export default React.memo(QuotationTab);

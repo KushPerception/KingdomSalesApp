@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -62,9 +62,9 @@ const QuotationList = ({ navigation }) => {
     })();
   }, []);
 
-  const toggleExpand = index => {
+  const toggleExpand = useCallback(index => {
     setExpandedIndex(prev => (prev === index ? null : index));
-  };
+  }, []);
 
   const buildFilters = overrideStatus => ({
     mrno: searchBy === 'MRNO' ? keyword : '',
@@ -89,7 +89,7 @@ const QuotationList = ({ navigation }) => {
     search(buildFilters('Pending'));
   };
 
-  const openSheet = eq => setBottomSheet({ visible: true, eq });
+  const openSheet = useCallback(eq => setBottomSheet({ visible: true, eq }), []);
   const closeSheet = () => setBottomSheet({ visible: false, eq: null });
 
   const openApproveModal = eq => {
@@ -112,6 +112,27 @@ const QuotationList = ({ navigation }) => {
       setApproving(false);
     }
   };
+
+  const keyExtractor = useCallback(
+    (item, i) =>
+      item.mr_no && item.stock_code
+        ? `${item.mr_no}-${item.stock_code}`
+        : i.toString(),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }) => (
+      <QuotationTab
+        item={item}
+        index={index}
+        isExpanded={expandedIndex === index}
+        onToggle={toggleExpand}
+        onPressMenu={openSheet}
+      />
+    ),
+    [expandedIndex, toggleExpand, openSheet],
+  );
 
   const sheetButtons = [
     {
@@ -224,19 +245,15 @@ const QuotationList = ({ navigation }) => {
       ) : (
         <FlatList
           data={list}
-          keyExtractor={(_, i) => i.toString()}
-          renderItem={({ item, index }) => (
-            <QuotationTab
-              item={item}
-              index={index}
-              expandedIndex={expandedIndex}
-              onToggle={toggleExpand}
-              onPressMenu={openSheet}
-            />
-          )}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
+          maxToRenderPerBatch={8}
+          windowSize={7}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews
           ListFooterComponent={
             footerLoading ? (
               <ActivityIndicator
