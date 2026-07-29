@@ -3,28 +3,28 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import AttachmentImageViewer from './AttachmentImageViewer';
 import {
   BlackColor,
+  darkGreyTextColor,
   lightGreyTextColor,
   primaryColor,
   whiteColor,
 } from '../../utility/colors';
 import { fonts } from '../../utility/GlobalStyles';
 
-export const formatFileSizeKB = bytes => {
-  const n = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes;
-  return Number.isFinite(n) ? `${(n / 1024).toFixed(1)} KB` : null;
-};
-
 // Attachments fetched from the API no longer carry their file content inline
-// — the list endpoint returns metadata only (name/date/size/SLN0), and the
+// — the list endpoint returns metadata only (name/description/SLN0), and the
 // actual Base64 is fetched lazily per-attachment via `attachmentModule` +
 // SLN0 (see AttachmentImageViewer / utility/ApiHelpers/AttachmentsApi).
 const hasPreviewableFile = attachment =>
   !!(attachment.ATTACHFILE || attachment.SLN0 || attachment.SLNO);
 
-// One attachment card: name, "date · size" meta line, and an inline preview
-// (image thumbnail or document tile). Used for every screen that lists
-// attachments fetched from the API.
-export const AttachmentRow = ({ attachment, accentColor, style, attachmentModule }) => (
+// One attachment card: name, description, and an inline preview (image
+// thumbnail or document tile). Date/size are intentionally not shown.
+export const AttachmentRow = ({
+  attachment,
+  accentColor,
+  style,
+  attachmentModule,
+}) => (
   <View
     style={[
       styles.card,
@@ -36,14 +36,12 @@ export const AttachmentRow = ({ attachment, accentColor, style, attachmentModule
       <Text style={styles.name} numberOfLines={1}>
         {attachment.ATTACHNAME}
       </Text>
-      <Text style={styles.meta}>
-        {[
-          attachment.ATTACHDATE?.split(' ')[0],
-          formatFileSizeKB(attachment.ATTACHSIZE),
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </Text>
+      {!!attachment.DESCRIPTION && (
+        <Text style={styles.description}>
+          <Text style={styles.descriptionLabel}>Description: </Text>
+          {attachment.DESCRIPTION}
+        </Text>
+      )}
       {hasPreviewableFile(attachment) && (
         <View style={styles.preview}>
           <AttachmentImageViewer
@@ -103,11 +101,15 @@ const styles = StyleSheet.create({
   },
   info: { flex: 1 },
   name: { fontSize: 13, fontFamily: fonts.Lato_Bold, color: BlackColor },
-  meta: {
-    fontSize: 11,
+  description: {
+    fontSize: 12,
     fontFamily: fonts.Lato_Regular,
-    color: lightGreyTextColor,
-    marginTop: 2,
+    color: BlackColor,
+    marginTop: 4,
+  },
+  descriptionLabel: {
+    fontFamily: fonts.Lato_Bold,
+    color: darkGreyTextColor,
   },
   preview: { marginTop: 8 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
