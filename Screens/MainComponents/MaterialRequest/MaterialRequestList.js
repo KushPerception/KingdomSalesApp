@@ -15,16 +15,13 @@ import DatePicker from 'react-native-date-picker';
 import { TextInput } from 'react-native-gesture-handler';
 import usePaginatedList from '../../../hooks/usePaginatedList';
 import { fetchMaterialRequestList } from '../../../utility/ApiHelpers/MaterialRequestApi';
-import {
-  BlackColor,
-  modalBackgroundColor,
-  primaryColor,
-} from '../../../utility/colors';
-import ButtonWithLoader from '../../CommonComponents/ButtonLoader';
+import { BlackColor, primaryColor } from '../../../utility/colors';
 import FabButton from '../../CommonComponents/FabButton';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
 import OfflineNotice from '../../CommonComponents/OfflineNotice';
+import ButtonWithLoader from '../../CommonComponents/ButtonLoader';
+import MaterialRequestTab from './MaterialRequestTab';
 
 const SEARCH_BY_OPTIONS = ['MRNO', 'Division', 'Dept'];
 
@@ -95,46 +92,16 @@ const MaterialRequestList = props => {
     ]);
   };
 
-  const RenderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
-      activeOpacity={0.6}
-      onPress={() => {
-        if (item?.is_editable) {
-          props.navigation.navigate('MaterialRequestForm', { mrno: item.MRNO });
-        } else {
-          Alert.alert(
-            'Editing Not Allowed',
-            'The MR request forwarded to the Purchase Department.',
-          );
-        }
-      }}
-    >
-      <View style={styles.itemTitleRow}>
-        <Text style={styles.itemTitle}>{item?.MRNO ?? '-'}</Text>
-        <View style={styles.badgeRow}>
-          {
-            <Text
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(item?.MRSTATUS) },
-              ]}
-            >
-              {item?.MRSTATUS ?? 'PENDING'}
-            </Text>
-          }
-          {item?.is_editable && <Text style={styles.editBadge}>Edit</Text>}
-        </View>
-      </View>
-      <Text style={styles.itemText}>Date: {item?.MRDATE ?? '-'}</Text>
-      <Text style={styles.itemText}>Division: {item?.DIVISION ?? '-'}</Text>
-      <Text style={styles.itemText}>Dept: {item?.DEPT ?? '-'}</Text>
-      <Text style={styles.itemText}>Plant: {item?.PLANT ?? '-'}</Text>
-      <Text style={styles.itemText}>Eq/Part: {item?.EQPART ?? '-'}</Text>
-      <Text style={styles.itemText}>Veh No: {item?.VEHNO ?? '-'}</Text>
-      <Text style={styles.itemText}>Priority: {item?.PRIORITY ?? '-'}</Text>
-    </TouchableOpacity>
-  );
+  const openItem = item => {
+    if (item?.is_editable) {
+      props.navigation.navigate('MaterialRequestForm', { mrno: item.MRNO });
+    } else {
+      Alert.alert(
+        'Editing Not Allowed',
+        'The MR request forwarded to the Purchase Department.',
+      );
+    }
+  };
 
   const RenderFooter = () =>
     list?.length > 0 && !noMorePages ? (
@@ -274,7 +241,9 @@ const MaterialRequestList = props => {
         <FlatList
           data={list}
           keyExtractor={(_, index) => index + ''}
-          renderItem={RenderItem}
+          renderItem={({ item }) => (
+            <MaterialRequestTab item={item} onPress={openItem} />
+          )}
           ListFooterComponent={RenderFooter}
           removeClippedSubviews={true}
           extraData={list}
@@ -286,23 +255,6 @@ const MaterialRequestList = props => {
       )}
     </View>
   );
-};
-
-const getStatusColor = status => {
-  switch (status?.toUpperCase()) {
-    case 'APPROVED':
-      return '#2e7d32';
-    case 'PENDING':
-      return '#e65100';
-    case 'REJECTED':
-      return '#c62828';
-    case 'CANCEL':
-      return '#757575';
-    case 'CLOSED':
-      return '#555';
-    default:
-      return '#1565c0';
-  }
 };
 
 const styles = StyleSheet.create({
@@ -385,37 +337,6 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: { fontSize: 14, color: BlackColor },
   dropdownItemTextActive: { color: 'white' },
-  itemContainer: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: modalBackgroundColor,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  itemTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 4,
-  },
-  itemTitle: { fontSize: 15, fontWeight: 'bold' },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusBadge: {
-    fontSize: 11,
-    color: 'white',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  editBadge: {
-    fontSize: 11,
-    color: primaryColor,
-    borderWidth: 1,
-    borderColor: primaryColor,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
-  itemText: { fontSize: 13, paddingTop: 2, color: '#444' },
   footer: { padding: 10, alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
