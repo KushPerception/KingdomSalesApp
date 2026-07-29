@@ -9,17 +9,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
 import {
   getMaterialRequestAttachments,
   getMaterialRequestDetail,
   submitMaterialRequest,
   updateMaterialRequest,
 } from '../../../utility/ApiHelpers/MaterialRequestApi';
-import { BlackColor, primaryColor } from '../../../utility/colors';
+import { primaryColor } from '../../../utility/colors';
 import FabButton from '../../CommonComponents/FabButton';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
+import MaterialRequestItemCard from './Components/MaterialRequestItemCard';
 
 const MaterialRequestItems = props => {
   const {
@@ -265,47 +265,14 @@ const MaterialRequestItems = props => {
             <Text style={styles.emptyText}>Tap + to add stock items</Text>
           ) : (
             items.map((item, idx) => (
-              <View key={idx} style={styles.card}>
-                {/* Stock Info */}
-                <View style={styles.cardHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.cardCode}>{item.stockcode || '—'}</Text>
-                    <Text style={styles.cardName}>{item.stockname || '—'}</Text>
-                  </View>
-                  {canEdit && (
-                    <TouchableOpacity
-                      onPress={() => removeItem(idx)}
-                      style={styles.removeBtn}
-                    >
-                      <Text style={styles.removeBtnText}>✕</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Quantity */}
-                <Text style={styles.fieldLabel}>Quantity *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Quantity"
-                  placeholderTextColor="#aaa"
-                  keyboardType="numeric"
-                  value={item.qty}
-                  onChangeText={v => updateItem(idx, 'qty', v)}
-                />
-
-                {/* Remark */}
-                <Text style={styles.fieldLabel}>
-                  Remark{item.isNewStock ? ' *' : ''}
-                </Text>
-                <TextInput
-                  style={[styles.input, styles.remarkInput]}
-                  placeholder="Enter Remark"
-                  placeholderTextColor="#aaa"
-                  value={item.remarks}
-                  onChangeText={v => updateItem(idx, 'remarks', v)}
-                  multiline
-                />
-              </View>
+              <MaterialRequestItemCard
+                key={idx}
+                item={item}
+                canEdit={canEdit}
+                onChangeQty={v => updateItem(idx, 'qty', v)}
+                onChangeRemarks={v => updateItem(idx, 'remarks', v)}
+                onRemove={() => removeItem(idx)}
+              />
             ))
           )}
 
@@ -356,38 +323,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   lockedBannerText: { color: '#c62828', fontSize: 13, fontWeight: '600' },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 14,
-    elevation: 2,
-    marginBottom: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: primaryColor,
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start' },
-  cardCode: { fontSize: 14, fontWeight: '700', color: primaryColor },
-  cardName: { fontSize: 13, color: BlackColor, marginTop: 2 },
-  removeBtn: { padding: 4 },
-  removeBtnText: { fontSize: 16, color: '#e74c3c' },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: BlackColor,
-    marginBottom: 4,
-    marginTop: 10,
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    backgroundColor: 'white',
-    color: BlackColor,
-    fontSize: 13,
-  },
-  remarkInput: { height: 70, textAlignVertical: 'top', paddingTop: 8 },
   nextBtn: {
     marginTop: 8,
     backgroundColor: primaryColor,

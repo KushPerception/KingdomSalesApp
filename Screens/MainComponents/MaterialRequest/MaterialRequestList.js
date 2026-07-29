@@ -21,7 +21,7 @@ import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
 import OfflineNotice from '../../CommonComponents/OfflineNotice';
 import ButtonWithLoader from '../../CommonComponents/ButtonLoader';
-import MaterialRequestTab from './MaterialRequestTab';
+import MaterialRequestTab from './Components/MaterialRequestTab';
 
 const SEARCH_BY_OPTIONS = ['MRNO', 'Division', 'Dept'];
 

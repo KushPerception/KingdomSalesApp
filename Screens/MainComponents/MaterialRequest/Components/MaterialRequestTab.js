@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { modalBackgroundColor, primaryColor } from '../../../utility/colors';
+import { modalBackgroundColor, primaryColor } from '../../../../utility/colors';
 
 const getStatusColor = status => {
   switch (status?.toUpperCase()) {

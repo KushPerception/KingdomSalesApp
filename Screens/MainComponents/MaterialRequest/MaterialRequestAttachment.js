@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   ActivityIndicator,
@@ -18,8 +17,7 @@ import {
   errorCodes,
 } from '@react-native-documents/picker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { BlackColor, primaryColor } from '../../../utility/colors';
-import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
+import { primaryColor } from '../../../utility/colors';
 import { AttachmentRow } from '../../CommonComponents/AttachmentsList';
 import HeaderComponent from '../../CommonComponents/Header';
 import {
@@ -28,6 +26,7 @@ import {
   getMaterialRequestAttachments,
   uploadMaterialRequestAttachment,
 } from '../../../utility/ApiHelpers/MaterialRequestApi';
+import MaterialRequestFileCard from './Components/MaterialRequestFileCard';
 
 const ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx', 'xls'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -313,41 +312,13 @@ const MaterialRequestAttachment = props => {
               <Text style={styles.emptyText}>No attachments added</Text>
             ) : files.length === 0 && isEdit ? null : (
               files.map((file, idx) => (
-                <View key={idx} style={styles.fileCard}>
-                  <View style={{ flex: 1 }}>
-                    <AttachmentImageViewer attachment={file} />
-                    <TextInput
-                      style={styles.descriptionInput}
-                      placeholder="Description (required)"
-                      placeholderTextColor="#aaa"
-                      value={file.description}
-                      onChangeText={text => updateFileDescription(idx, text)}
-                      editable={!loading}
-                    />
-                    {!!(file.uploading || file.uploaded || file.error) && (
-                      <Text
-                        style={[
-                          styles.fileStatus,
-                          file.uploading && styles.fileStatusUploading,
-                          file.error && styles.fileStatusError,
-                        ]}
-                      >
-                        {file.uploading
-                          ? 'Uploading...'
-                          : file.uploaded
-                          ? 'Uploaded ✓'
-                          : 'Upload failed ✗'}
-                      </Text>
-                    )}
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => removeFile(idx)}
-                    style={styles.removeBtn}
-                    disabled={loading}
-                  >
-                    <Text style={styles.removeBtnText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
+                <MaterialRequestFileCard
+                  key={idx}
+                  file={file}
+                  loading={loading}
+                  onChangeDescription={text => updateFileDescription(idx, text)}
+                  onRemove={() => removeFile(idx)}
+                />
               ))
             )}
 
@@ -390,32 +361,6 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 14,
   },
-  fileCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    elevation: 2,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderLeftWidth: 4,
-    borderLeftColor: primaryColor,
-  },
-  descriptionInput: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-    color: BlackColor,
-  },
-  fileStatus: { fontSize: 11, color: '#888', marginTop: 6 },
-  fileStatusUploading: { color: '#f39c12' },
-  fileStatusError: { color: '#e74c3c' },
-  removeBtn: { padding: 4 },
-  removeBtnText: { fontSize: 16, color: '#e74c3c' },
   addBtn: {
     marginTop: 16,
     borderWidth: 1.5,
