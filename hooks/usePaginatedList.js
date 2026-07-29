@@ -15,6 +15,12 @@ const usePaginatedList = ({ fetchPage }) => {
   // twice and appending duplicate items. This guard is synchronous, so it
   // protects every screen using this hook, regardless of item shape.
   const fetchingRef = useRef(false);
+  // FlatList fires onEndReached spuriously on an empty list (content height
+  // < viewport) — this can happen before the screen's first search() call
+  // (e.g. while it's still awaiting the auth token from storage). Without
+  // this guard, loadMore would fire a page-2 request with empty filters and
+  // whatever token happens to be available yet, which can 401.
+  const hasSearchedRef = useRef(false);
 
   const runFetch = async (filters, pageNo, reset) => {
     if (fetchingRef.current) {
@@ -60,7 +66,10 @@ const usePaginatedList = ({ fetchPage }) => {
       setPage(pageNo);
       setNoMorePages(pageNo >= lastPage);
     } catch (e) {
-      console.error('[usePaginatedList] runFetch error', e.message);
+      console.error(
+        '[usePaginatedList] runFetch error',
+        JSON.stringify({ pageNo, reset, message: e.message }),
+      );
       setError(e);
     } finally {
       setLoading(false);
@@ -70,6 +79,7 @@ const usePaginatedList = ({ fetchPage }) => {
   };
 
   const search = filters => {
+    hasSearchedRef.current = true;
     filtersRef.current = filters ?? {};
     return runFetch(filtersRef.current, 1, true);
   };
@@ -77,6 +87,7 @@ const usePaginatedList = ({ fetchPage }) => {
   const clear = defaultFilters => search(defaultFilters);
 
   const loadMore = () => {
+    if (!hasSearchedRef.current) return;
     if (loading || footerLoading || noMorePages || fetchingRef.current) return;
     runFetch(filtersRef.current, page + 1, false);
   };

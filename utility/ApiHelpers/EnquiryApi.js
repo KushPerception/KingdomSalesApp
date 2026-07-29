@@ -30,6 +30,7 @@ export const fetchQuotationList = async (userToken, filters, page = 1) => {
     page,
   });
   const url = `${StagApiUrl}/enquiry/quotation-list?${query}`;
+  console.log('[fetchQuotationList] url', url);
   const response = await fetch(url, {
     method: 'GET',
     headers: {

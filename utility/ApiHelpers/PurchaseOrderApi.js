@@ -4,7 +4,10 @@ const StagApiUrl = `${mainUrl}api`;
 
 const buildQuery = params =>
   Object.entries(params)
-    .map(([key, value]) => `${key}=${value ?? ''}`)
+    .filter(
+      ([, value]) => value !== undefined && value !== null && value !== '',
+    )
+    .map(([key, value]) => `${key}=${value}`)
     .join('&');
 
 const parseJsonResponse = async response => {
