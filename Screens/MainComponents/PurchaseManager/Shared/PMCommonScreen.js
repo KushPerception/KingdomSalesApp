@@ -4,6 +4,7 @@ import { ActivityIndicator, BackHandler, StyleSheet, Text, View } from 'react-na
 import { useFocusEffect } from '@react-navigation/native';
 import HeaderComponent from '../../../CommonComponents/Header';
 import AttachmentsList from '../../../CommonComponents/AttachmentsList';
+import { moduleFromAttachmentsApiUrl } from '../../../../utility/ApiHelpers/AttachmentsApi';
 import { primaryColor } from '../../../../utility/colors';
 import { fonts } from '../../../../utility/GlobalStyles';
 import PODetailView from './PMCommonViews/PODetailView';
@@ -102,7 +103,10 @@ const PMCommonScreen = props => {
       ) : isDetail ? (
         <DetailView data={data} />
       ) : (
-        <AttachmentsList data={data} />
+        <AttachmentsList
+          data={data}
+          attachmentModule={moduleFromAttachmentsApiUrl(apiUrl)}
+        />
       )}
     </View>
   );

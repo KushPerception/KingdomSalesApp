@@ -64,7 +64,6 @@ const PurchaseOrderList = ({ navigation }) => {
   useEffect(() => {
     (async () => {
       tokenRef.current = await AsyncStorage.getItem('access_token');
-      console.log('[PurchaseOrderList] Init — loading pending orders');
       search({ ...DEFAULT_FILTERS, pending_only: 1 });
     })();
   }, []);
@@ -86,7 +85,14 @@ const PurchaseOrderList = ({ navigation }) => {
   };
 
   const handleSearch = () => {
-    console.log('[PurchaseOrderList] Search triggered — searchBy:', searchBy, '| keyword:', keyword, '| status:', statusFilter);
+    console.log(
+      '[PurchaseOrderList] Search triggered — searchBy:',
+      searchBy,
+      '| keyword:',
+      keyword,
+      '| status:',
+      statusFilter,
+    );
     search(buildFilters());
   };
 
@@ -115,7 +121,9 @@ const PurchaseOrderList = ({ navigation }) => {
     try {
       const action =
         mode === 'reject' ? rejectPurchaseOrder : approvePurchaseOrder;
-      console.log(`[PurchaseOrderList] PO action — mode: ${mode} | PONO: ${poNo}`);
+      console.log(
+        `[PurchaseOrderList] PO action — mode: ${mode} | PONO: ${poNo}`,
+      );
       await action(tokenRef.current, poNo, poActionRemarks);
       console.log('[PurchaseOrderList] PO action success — refreshing list');
       setPOActionModal({ visible: false, po: null, mode: 'approve' });

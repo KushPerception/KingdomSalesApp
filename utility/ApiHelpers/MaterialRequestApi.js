@@ -265,6 +265,10 @@ export const uploadMaterialRequestAttachment = async (
         type: mimeType,
         data: RNBlobUtil.wrap(fileUri.replace('file://', '')),
       },
+      {
+        name: 'description',
+        data: file.description ?? '',
+      },
     ],
   );
 

@@ -4,8 +4,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   BackHandler,
-  FlatList,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,6 +26,7 @@ import {
 import { BlackColor, primaryColor } from '../../../utility/colors';
 import HeaderComponent from '../../CommonComponents/Header';
 import LoaderComponent from '../../CommonComponents/LoaderComponent';
+import MaterialRequestSelectModal from './Components/MaterialRequestSelectModal';
 
 const PRIORITY_OPTIONS = ['High', 'Normal', 'Low'];
 
@@ -242,48 +241,6 @@ const MaterialRequestForm = props => {
     props.navigation.navigate('MaterialRequestItems', payload);
   };
 
-  const renderModal = (items, selectedVal, onSelect, keyExtractor) => (
-    <Modal
-      transparent
-      visible={activeModal !== null}
-      animationType="fade"
-      onRequestClose={() => setActiveModal(null)}
-    >
-      <TouchableOpacity
-        style={styles.overlay}
-        onPress={() => setActiveModal(null)}
-      >
-        <View style={styles.dropdownMenu}>
-          <FlatList
-            data={items}
-            keyExtractor={(item, idx) => keyExtractor(item) + idx}
-            renderItem={({ item }) => {
-              const label = keyExtractor(item);
-              return (
-                <TouchableOpacity
-                  style={[
-                    styles.menuItem,
-                    selectedVal === label && styles.menuItemActive,
-                  ]}
-                  onPress={() => onSelect(label)}
-                >
-                  <Text
-                    style={[
-                      styles.menuItemText,
-                      selectedVal === label && styles.menuItemTextActive,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
-
   const modalConfig = {
     div: {
       items: divisions,
@@ -444,8 +401,16 @@ const MaterialRequestForm = props => {
         </ScrollView>
       )}
 
-      {active &&
-        renderModal(active.items, active.val, active.onSelect, active.key)}
+      {active && (
+        <MaterialRequestSelectModal
+          visible={activeModal !== null}
+          items={active.items}
+          selectedValue={active.val}
+          keyExtractor={active.key}
+          onSelect={active.onSelect}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
     </View>
   );
 };
@@ -487,24 +452,6 @@ const styles = StyleSheet.create({
   dropdownText: { fontSize: 14, color: BlackColor },
   placeholder: { color: '#aaa' },
   arrow: { fontSize: 12, color: 'gray' },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  dropdownMenu: {
-    backgroundColor: 'white',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    elevation: 5,
-    maxHeight: 300,
-  },
-  menuItem: { paddingVertical: 12, paddingHorizontal: 16 },
-  menuItemActive: { backgroundColor: primaryColor },
-  menuItemText: { fontSize: 14, color: BlackColor },
-  menuItemTextActive: { color: 'white' },
   NextBtn: {
     marginTop: 24,
     backgroundColor: primaryColor,

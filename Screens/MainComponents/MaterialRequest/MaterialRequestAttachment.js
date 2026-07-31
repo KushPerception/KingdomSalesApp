@@ -17,12 +17,8 @@ import {
   errorCodes,
 } from '@react-native-documents/picker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { BlackColor, primaryColor } from '../../../utility/colors';
-import AttachmentImageViewer from '../../CommonComponents/AttachmentImageViewer';
-import {
-  AttachmentRow,
-  formatFileSizeKB,
-} from '../../CommonComponents/AttachmentsList';
+import { primaryColor } from '../../../utility/colors';
+import { AttachmentRow } from '../../CommonComponents/AttachmentsList';
 import HeaderComponent from '../../CommonComponents/Header';
 import {
   submitMaterialRequest,
@@ -30,6 +26,7 @@ import {
   getMaterialRequestAttachments,
   uploadMaterialRequestAttachment,
 } from '../../../utility/ApiHelpers/MaterialRequestApi';
+import MaterialRequestFileCard from './Components/MaterialRequestFileCard';
 
 const ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx', 'xls'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -47,7 +44,7 @@ const sanitizeFileName = originalName => {
 
 const MaterialRequestAttachment = props => {
   const { mrNo, payload, isEdit } = props.route?.params ?? {};
-  // each file: { name, uri, type, size, uploaded: bool, uploading: bool, error: string|null }
+  // each file: { name, uri, type, size, description, uploaded: bool, uploading: bool, error: string|null }
   const [files, setFiles] = useState([]);
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -91,12 +88,18 @@ const MaterialRequestAttachment = props => {
       {
         ...file,
         name: sanitizeFileName(file.name),
+        description: '',
         uploaded: false,
         uploading: false,
         error: null,
       },
     ]);
   };
+
+  const updateFileDescription = (idx, description) =>
+    setFiles(prev =>
+      prev.map((f, i) => (i === idx ? { ...f, description } : f)),
+    );
 
   const pickDocument = async () => {
     try {
@@ -157,6 +160,15 @@ const MaterialRequestAttachment = props => {
   const removeFile = idx => setFiles(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async () => {
+    const pendingFiles = files.filter(f => !f.uploaded);
+    if (pendingFiles.some(f => !f.description?.trim())) {
+      Alert.alert(
+        'Description Required',
+        'Please add a description for every attachment before submitting.',
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('access_token');
@@ -170,7 +182,6 @@ const MaterialRequestAttachment = props => {
         setMrSubmitted(true);
       }
 
-      const pendingFiles = files.filter(f => !f.uploaded);
       const failedFileNames = [];
 
       for (const file of pendingFiles) {
@@ -272,7 +283,11 @@ const MaterialRequestAttachment = props => {
         windowSize={5}
         removeClippedSubviews
         renderItem={({ item: att }) => (
-          <AttachmentRow attachment={att} accentColor="#27ae60" />
+          <AttachmentRow
+            attachment={att}
+            accentColor="#27ae60"
+            attachmentModule="material-request"
+          />
         )}
         ListHeaderComponent={
           <>
@@ -297,38 +312,13 @@ const MaterialRequestAttachment = props => {
               <Text style={styles.emptyText}>No attachments added</Text>
             ) : files.length === 0 && isEdit ? null : (
               files.map((file, idx) => (
-                <View key={idx} style={styles.fileCard}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.fileName} numberOfLines={1}>
-                      {file.name}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.fileSize,
-                        file.uploading && { color: '#f39c12' },
-                        file.error && { color: '#e74c3c' },
-                      ]}
-                    >
-                      {file.uploading
-                        ? 'Uploading...'
-                        : file.uploaded
-                        ? `${formatFileSizeKB(file.size)} ✓`
-                        : file.error
-                        ? 'Upload failed ✗'
-                        : formatFileSizeKB(file.size)}
-                    </Text>
-                    <View style={{ marginTop: 8 }}>
-                      <AttachmentImageViewer attachment={file} />
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => removeFile(idx)}
-                    style={styles.removeBtn}
-                    disabled={loading}
-                  >
-                    <Text style={styles.removeBtnText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
+                <MaterialRequestFileCard
+                  key={idx}
+                  file={file}
+                  loading={loading}
+                  onChangeDescription={text => updateFileDescription(idx, text)}
+                  onRemove={() => removeFile(idx)}
+                />
               ))
             )}
 
@@ -371,21 +361,6 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 14,
   },
-  fileCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    elevation: 2,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-    borderLeftColor: primaryColor,
-  },
-  fileName: { fontSize: 13, fontWeight: '600', color: BlackColor },
-  fileSize: { fontSize: 11, color: '#888', marginTop: 2 },
-  removeBtn: { padding: 4 },
-  removeBtnText: { fontSize: 16, color: '#e74c3c' },
   addBtn: {
     marginTop: 16,
     borderWidth: 1.5,
