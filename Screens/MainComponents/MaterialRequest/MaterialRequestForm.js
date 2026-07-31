@@ -104,7 +104,7 @@ const MaterialRequestForm = props => {
         setMrDate(d.MRDATE ?? '');
         setPriority(d.PRIORITY ?? '');
         setJobRefNo(d.JOBREFNO ?? '');
-        const vehFound = vehList.find(v => v?.VehName === d.VEHNO);
+        const vehFound = vehList.find(v => v?.REGNO === d.VEHNO);
         setVehNo(d.VEHNO ?? '');
         setVehDesc(vehFound?.CC ?? '');
 
@@ -287,12 +287,12 @@ const MaterialRequestForm = props => {
       items: vehicles,
       val: vehNo,
       onSelect: v => {
-        const found = vehicles.find(i => i?.VehName === v);
+        const found = vehicles.find(i => i?.REGNO === v);
         setVehNo(v);
         setVehDesc(found?.CC ?? '');
         setActiveModal(null);
       },
-      key: i => i?.VehName ?? String(i),
+      key: i => i?.REGNO ?? String(i),
     },
     priority: {
       items: PRIORITY_OPTIONS,

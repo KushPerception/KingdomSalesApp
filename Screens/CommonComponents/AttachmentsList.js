@@ -33,9 +33,6 @@ export const AttachmentRow = ({
     ]}
   >
     <View style={styles.info}>
-      <Text style={styles.name} numberOfLines={1}>
-        {attachment.ATTACHNAME}
-      </Text>
       {!!attachment.DESCRIPTION && (
         <Text style={styles.description}>
           <Text style={styles.descriptionLabel}>Description: </Text>
@@ -100,7 +97,6 @@ const styles = StyleSheet.create({
     borderLeftColor: primaryColor,
   },
   info: { flex: 1 },
-  name: { fontSize: 13, fontFamily: fonts.Lato_Bold, color: BlackColor },
   description: {
     fontSize: 12,
     fontFamily: fonts.Lato_Regular,

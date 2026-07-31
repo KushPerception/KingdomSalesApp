@@ -118,9 +118,6 @@ const DocumentTile = memo(({ name, ext, base64, localUri, slno, attachmentModule
         <Text style={styles.docLabel}>
           {config?.label ?? ext?.toUpperCase()}
         </Text>
-        <Text style={styles.docName} numberOfLines={1}>
-          {name}
-        </Text>
       </View>
       {opening ? (
         <ActivityIndicator size="small" color={primaryColor} />
