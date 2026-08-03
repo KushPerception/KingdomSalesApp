@@ -43,6 +43,7 @@ const PurchaseOrderList = ({ navigation }) => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [statusFilter, setStatusFilter] = useState('Pending');
+  const [refreshing, setRefreshing] = useState(false);
 
   const [poBottomSheet, setPOBottomSheet] = useState({
     visible: false,
@@ -272,6 +273,12 @@ const PurchaseOrderList = ({ navigation }) => {
           contentContainerStyle={styles.listContent}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
+          refreshing={refreshing}
+          onRefresh={async () => {
+            setRefreshing(true);
+            await search(buildFilters());
+            setRefreshing(false);
+          }}
           ListFooterComponent={
             footerLoading ? (
               <ActivityIndicator

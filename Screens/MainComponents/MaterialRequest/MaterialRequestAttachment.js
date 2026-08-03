@@ -25,6 +25,7 @@ import {
   updateMaterialRequest,
   getMaterialRequestAttachments,
   uploadMaterialRequestAttachment,
+  deleteMaterialRequestAttachment,
 } from '../../../utility/ApiHelpers/MaterialRequestApi';
 import MaterialRequestFileCard from './Components/MaterialRequestFileCard';
 
@@ -159,6 +160,30 @@ const MaterialRequestAttachment = props => {
 
   const removeFile = idx => setFiles(prev => prev.filter((_, i) => i !== idx));
 
+  const deleteExistingAttachment = att => {
+    const id = att.SLN0 ?? att.SLNO;
+    Alert.alert(
+      'Delete Attachment',
+      `Are you sure you want to delete "${att.DESCRIPTION || 'this attachment'}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('access_token');
+              await deleteMaterialRequestAttachment(token, id);
+              setExistingAttachments(prev => prev.filter(a => (a.SLN0 ?? a.SLNO) !== id));
+            } catch (e) {
+              Alert.alert('Error', e.message ?? 'Failed to delete attachment.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleSubmit = async () => {
     const pendingFiles = files.filter(f => !f.uploaded);
     if (pendingFiles.some(f => !f.description?.trim())) {
@@ -287,6 +312,7 @@ const MaterialRequestAttachment = props => {
             attachment={att}
             accentColor="#27ae60"
             attachmentModule="material-request"
+            onDelete={() => deleteExistingAttachment(att)}
           />
         )}
         ListHeaderComponent={

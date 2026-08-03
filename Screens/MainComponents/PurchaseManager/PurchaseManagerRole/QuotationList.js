@@ -41,6 +41,7 @@ const QuotationList = ({ navigation }) => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [statusFilter, setStatusFilter] = useState('Pending');
+  const [refreshing, setRefreshing] = useState(false);
 
   const [bottomSheet, setBottomSheet] = useState({ visible: false, eq: null });
   const [approveModal, setApproveModal] = useState({
@@ -254,6 +255,12 @@ const QuotationList = ({ navigation }) => {
           windowSize={7}
           updateCellsBatchingPeriod={50}
           removeClippedSubviews
+          refreshing={refreshing}
+          onRefresh={async () => {
+            setRefreshing(true);
+            await search(buildFilters());
+            setRefreshing(false);
+          }}
           ListFooterComponent={
             footerLoading ? (
               <ActivityIndicator

@@ -41,6 +41,8 @@ const MaterialRequestList = props => {
   const [keyword, setKeyword] = useState('');
   const isFirstRun = useRef(true);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   const { list, loading, footerLoading, noMorePages, search, loadMore } =
     usePaginatedList({
       fetchPage: (filters, page) =>
@@ -247,6 +249,12 @@ const MaterialRequestList = props => {
           ListFooterComponent={RenderFooter}
           removeClippedSubviews={true}
           extraData={list}
+          refreshing={refreshing}
+          onRefresh={async () => {
+            setRefreshing(true);
+            await search(buildFilters());
+            setRefreshing(false);
+          }}
         />
       ) : (
         <View style={styles.emptyContainer}>

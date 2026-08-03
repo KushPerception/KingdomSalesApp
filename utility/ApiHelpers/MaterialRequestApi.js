@@ -243,6 +243,22 @@ const getAttachmentMimeType = file => {
   return map[ext] ?? 'application/octet-stream';
 };
 
+export const deleteMaterialRequestAttachment = async (userToken, id) => {
+  const url = `${StagApiUrl}/material-request/attachments/${id}`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  if (response.status === 200 || response.status === 204) return true;
+  const errText = await response.text();
+  let message = errText;
+  try { message = JSON.parse(errText)?.message ?? errText; } catch (e) {}
+  throw new Error(message);
+};
+
 export const uploadMaterialRequestAttachment = async (
   userToken,
   mrNo,

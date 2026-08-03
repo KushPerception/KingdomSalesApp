@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +19,7 @@ import LandingCostCard from './LandingCostCard';
 
 const CostController = props => {
   const tokenRef = useRef(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { list, loading, footerLoading, search, loadMore } = usePaginatedList({
     fetchPage: (filters, page) =>
@@ -78,6 +79,12 @@ const CostController = props => {
           contentContainerStyle={styles.listContent}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
+          refreshing={refreshing}
+          onRefresh={async () => {
+            setRefreshing(true);
+            await search({});
+            setRefreshing(false);
+          }}
           ListFooterComponent={
             footerLoading ? (
               <ActivityIndicator

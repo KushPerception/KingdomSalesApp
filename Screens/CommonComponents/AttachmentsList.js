@@ -1,5 +1,6 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { DeleteIcon } from '../../Images';
 import AttachmentImageViewer from './AttachmentImageViewer';
 import {
   BlackColor,
@@ -24,6 +25,7 @@ export const AttachmentRow = ({
   accentColor,
   style,
   attachmentModule,
+  onDelete,
 }) => (
   <View
     style={[
@@ -32,6 +34,11 @@ export const AttachmentRow = ({
       style,
     ]}
   >
+    {!!onDelete && (
+      <TouchableOpacity style={styles.deleteIcon} onPress={onDelete}>
+        <Image source={DeleteIcon} style={styles.deleteIconImg} tintColor="#e74c3c" />
+      </TouchableOpacity>
+    )}
     <View style={styles.info}>
       {!!attachment.DESCRIPTION && (
         <Text style={styles.description}>
@@ -108,6 +115,8 @@ const styles = StyleSheet.create({
     color: darkGreyTextColor,
   },
   preview: { marginTop: 8 },
+  deleteIcon: { position: 'absolute', top: 8, right: 8, zIndex: 1 },
+  deleteIconImg: { width: 18, height: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: lightGreyTextColor, fontFamily: fonts.Lato_Regular },
 });

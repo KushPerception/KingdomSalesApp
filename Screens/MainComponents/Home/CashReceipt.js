@@ -49,6 +49,7 @@ const CashReceipt = (props) => {
   const [Page, setPage] = useState(1);
   const [footerLoading, setFooterLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [noMorePage, setNoMorePage] = useState(false);
   const [isCompanyModalVisible, setIsCompanyModalVisible] = useState(false);
   const [ShowDatePicker, setShowDatePicker] = useState(false);
@@ -365,6 +366,13 @@ const CashReceipt = (props) => {
             removeClippedSubviews={true}
             extraData={cashReceiptList}
             renderItem={RenderOrderData}
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              setCashReceiptList([]);
+              await getCashReceipts(company, keyword, filterDate, [], 1, setLoading);
+              setRefreshing(false);
+            }}
           />
         </View>
       ) : !cashReceiptList.length > 0 && loading === false ? (
