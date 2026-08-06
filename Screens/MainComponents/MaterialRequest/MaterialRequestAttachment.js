@@ -128,17 +128,33 @@ const MaterialRequestAttachment = props => {
     }
   };
 
+  const addPickedAsset = async (asset, fallbackName) => {
+    const fileName = asset.fileName ?? fallbackName;
+    try {
+      const [copyResult] = await keepLocalCopy({
+        files: [{ uri: asset.uri, fileName }],
+        destination: 'cachesDirectory',
+      });
+      if (copyResult.status !== 'success') {
+        throw new Error(copyResult.copyError);
+      }
+      validateAndAdd({
+        name: fileName,
+        uri: copyResult.localUri,
+        type: asset.type ?? 'image/jpeg',
+        size: asset.fileSize ?? 0,
+      });
+    } catch (e) {
+      Alert.alert('Error', 'Failed to save photo. Please try again.');
+    }
+  };
+
   const pickFromCamera = () => {
     launchCamera({ mediaType: 'photo', quality: 0.8 }, response => {
       if (response.didCancel || response.errorCode) return;
       const asset = response.assets?.[0];
       if (asset) {
-        validateAndAdd({
-          name: asset.fileName ?? `photo_${Date.now()}.jpg`,
-          uri: asset.uri,
-          type: asset.type ?? 'image/jpeg',
-          size: asset.fileSize ?? 0,
-        });
+        addPickedAsset(asset, `photo_${Date.now()}.jpg`);
       }
     });
   };
@@ -148,12 +164,7 @@ const MaterialRequestAttachment = props => {
       if (response.didCancel || response.errorCode) return;
       const asset = response.assets?.[0];
       if (asset) {
-        validateAndAdd({
-          name: asset.fileName ?? `image_${Date.now()}.jpg`,
-          uri: asset.uri,
-          type: asset.type ?? 'image/jpeg',
-          size: asset.fileSize ?? 0,
-        });
+        addPickedAsset(asset, `image_${Date.now()}.jpg`);
       }
     });
   };

@@ -269,6 +269,21 @@ export const uploadMaterialRequestAttachment = async (
   const fileUri = file.uri.startsWith('file://')
     ? file.uri
     : `file://${file.uri}`;
+  const filePath = fileUri.replace('file://', '');
+
+  let stat;
+  try {
+    stat = await RNBlobUtil.fs.stat(filePath);
+  } catch (e) {
+    throw new Error(
+      `${file.name} is no longer available on this device. Please remove and re-add it.`,
+    );
+  }
+  if (!stat || Number(stat.size) <= 0) {
+    throw new Error(
+      `${file.name} appears to be empty. Please remove and re-add it.`,
+    );
+  }
 
   const res = await RNBlobUtil.fetch(
     'POST',
@@ -279,7 +294,7 @@ export const uploadMaterialRequestAttachment = async (
         name: 'attachment',
         filename: file.name,
         type: mimeType,
-        data: RNBlobUtil.wrap(fileUri.replace('file://', '')),
+        data: RNBlobUtil.wrap(filePath),
       },
       {
         name: 'description',
