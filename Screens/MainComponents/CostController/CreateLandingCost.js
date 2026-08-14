@@ -208,8 +208,10 @@ const CreateLandingCost = props => {
     setLinkedPO(item.pono ?? item.PONO ?? '');
     setCategoryId(item.category_id ?? item.CATEGORY_ID ?? item.SLNO ?? '');
     setCategoryName(item.category_name ?? item.CATEGORY_NAME ?? '');
-    setCost(item.cost ?? item.COST ? String(item.cost ?? item.COST) : '');
-    setVatPct(item.vatper ?? item.VAT_PCT ? String(item.vatper ?? item.VAT_PCT) : '10');
+    const rawCost = item.cost ?? item.COST;
+    setCost(rawCost != null ? String(rawCost) : '');
+    const rawVat = item.VATPER ?? item.vatper ?? item.VAT_PCT;
+    setVatPct(rawVat != null ? String(rawVat) : '10');
     setRemarks(item.remarks ?? item.REMARKS ?? '');
     const isPosted = item.posted === '1' || item.posted === 1 || item.POSTED === '1' || item.POSTED === 1 || item.POSTED === true;
     setPosted(isPosted);

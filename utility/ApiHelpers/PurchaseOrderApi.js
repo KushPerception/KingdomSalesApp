@@ -43,11 +43,12 @@ export const fetchPurchaseOrderList = async (userToken, filters, page = 1) => {
     },
   });
   const json = await parseJsonResponse(response);
-  console.log('[PurchaseOrderApi] fetchPurchaseOrderList', {
-    page,
-    fetchedCount: json.data?.data?.length ?? 0,
-    lastPage: json.data?.last_page,
-  });
+  const items = json.data?.data ?? [];
+  const status = filters.approved_only ? 'Approved' : filters.rejected_only ? 'Rejected' : 'Pending';
+  console.log(
+    `[PurchaseOrderApi] ${status} Orders — page: ${page} | count: ${items.length}`,
+    JSON.stringify(items, null, 2),
+  );
   if (response.status !== 200 && response.status !== 201) {
     throw new Error(
       'fetch PO list failed: ' + response.status + ' ' + JSON.stringify(json),

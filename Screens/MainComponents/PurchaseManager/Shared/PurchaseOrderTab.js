@@ -12,6 +12,9 @@ import { fonts } from '../../../../utility/GlobalStyles';
 const PurchaseOrderTab = ({ item, onPressMenu, onPress }) => {
   if (!item) return null;
   const poDate = item.PODATE ? item.PODATE.split(' ')[0] : '-';
+  const netAmt = parseFloat(item.NETAMT) || 0;
+  const needsCeoReview = netAmt > 1000;
+  const firstLevelDone = needsCeoReview && item.approved && item.ApprovedBy;
 
   return (
     <TouchableOpacity
@@ -20,7 +23,14 @@ const PurchaseOrderTab = ({ item, onPressMenu, onPress }) => {
       activeOpacity={0.85}
     >
       <View style={styles.poTopRow}>
-        <Text style={styles.poNo}>{item.PONO}</Text>
+        <View style={styles.poTopLeft}>
+          <Text style={styles.poNo}>{item.PONO}</Text>
+          {!!firstLevelDone && (
+            <View style={styles.firstLevelBadge}>
+              <Text style={styles.firstLevelBadgeText}>✓ 1st Level Approved</Text>
+            </View>
+          )}
+        </View>
         <TouchableOpacity
           onPress={() => onPressMenu(item)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -51,6 +61,25 @@ const PurchaseOrderTab = ({ item, onPressMenu, onPress }) => {
         </Text>
       </View>
       {!!item.REMARKS && <Text style={styles.poRemarks}>{item.REMARKS}</Text>}
+      {[
+        { flag: item.approved, label: 'Approved By', name: item.ApprovedBy },
+        { flag: item.approved_gm, label: 'Approved By GM', name: item.APPROVEDBYGM },
+        { flag: item.approved_ceo, label: 'Approved By CEO', name: item.APPROVEDBYCEO },
+      ] && (
+        <View style={styles.approvedBox}>
+          {[
+            { flag: item.approved, label: 'Approved By', name: item.ApprovedBy },
+            { flag: item.approved_gm, label: 'Approved By GM', name: item.APPROVEDBYGM },
+            { flag: item.approved_ceo, label: 'Approved By CEO', name: item.APPROVEDBYCEO },
+          ]
+            
+            .map(a => (
+              <Text key={a.label} style={styles.approvedText}>
+                {a.label}: <Text style={styles.approvedName}>{a.name}</Text>
+              </Text>
+            ))}
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -95,6 +124,43 @@ const styles = StyleSheet.create({
     fontFamily: fonts.Lato_Regular,
     color: lightGreyTextColor,
     marginTop: 4,
+  },
+  poTopLeft: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 4,
+  },
+  firstLevelBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFF3CD',
+    borderWidth: 1,
+    borderColor: '#FFC107',
+    borderRadius: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  firstLevelBadgeText: {
+    fontSize: 10,
+    fontFamily: fonts.Lato_Bold,
+    color: '#856404',
+  },
+  approvedBox: {
+    marginTop: 6,
+    backgroundColor: '#e6f4ea',
+    borderLeftWidth: 3,
+    borderLeftColor: '#006B38',
+    borderRadius: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+  },
+  approvedText: {
+    fontSize: 12,
+    fontFamily: fonts.Lato_Regular,
+    color: '#006B38',
+  },
+  approvedName: {
+    fontFamily: fonts.Lato_Bold,
+    color: '#006B38',
   },
   threeDot: {
     fontSize: 16,
