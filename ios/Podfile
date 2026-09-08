@@ -23,6 +23,16 @@ target 'KingdomSalesAppRN83' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # These Firebase C dependencies are consumed by Swift pods (FirebaseCoreInternal,
+  # FirebaseCrashlytics, FirebaseSessions) that need modules to import them, but they
+  # don't define modules themselves. Scoped :modular_headers here (rather than a global
+  # use_modular_headers!) avoids forcing modular headers onto React Native's own pods,
+  # some of which (React-RuntimeCore/React-jsitooling/React-RuntimeHermes) intentionally
+  # share the Clang module name "react_runtime" and collide if all made modular at once.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'GoogleDataTransport', :modular_headers => true
+  pod 'nanopb', :modular_headers => true
+
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -30,5 +40,22 @@ target 'KingdomSalesAppRN83' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # fmt 11.0.2's consteval-based format-string constructor fails to
+    # compile under newer Clang (Xcode 26 / Clang 21) with "call to
+    # consteval function ... is not a constant expression". base.h
+    # unconditionally redefines FMT_USE_CONSTEVAL itself, so a command-line
+    # -D override is silently clobbered; patch the header directly instead.
+    fmt_header = File.join(installer.sandbox.pod_dir('fmt'), 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_header)
+      contents = File.read(fmt_header)
+      patched = contents
+        .sub('#  define FMT_CONSTEVAL consteval', '#  define FMT_CONSTEVAL')
+        .sub('#  define FMT_CONSTEXPR20 constexpr', '#  define FMT_CONSTEXPR20')
+      if patched != contents
+        File.chmod(0644, fmt_header)
+        File.write(fmt_header, patched)
+      end
+    end
   end
 end

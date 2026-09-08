@@ -204,9 +204,11 @@ const PODetailView = ({ data }) => {
                 <View style={styles.infoCellLabel}>
                   <Text style={styles.infoLabelText}>{label}</Text>
                 </View>
-                <View style={styles.infoCellValue}>
+                <View style={styles.summaryCellValue}>
                   <Text
                     style={styles.infoValueText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
                   >{`${value} ${currency}`}</Text>
                 </View>
               </View>
@@ -299,6 +301,13 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: 8,
     justifyContent: 'center',
+  },
+  summaryCellValue: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   infoLabelText: {
     fontSize: 12,

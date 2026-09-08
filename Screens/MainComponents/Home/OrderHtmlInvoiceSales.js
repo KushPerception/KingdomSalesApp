@@ -21,7 +21,7 @@ import {
 import Pdf from "react-native-pdf";
 import SaveButton from "../../CommonComponents/SaveButton";
 import { fonts, W } from "../../../utility/GlobalStyles";
-import RNFetchBlob from "rn-fetch-blob";
+import RNFetchBlob from "react-native-blob-util";
 import LoaderComponent from "../../CommonComponents/LoaderComponent";
 import NetInfo from "@react-native-community/netinfo";
 import OfflineNotice from "../../CommonComponents/OfflineNotice";
