@@ -41,6 +41,16 @@ target 'KingdomSalesAppRN83' do
       # :ccache_enabled => true
     )
 
+    # Xcode 26+ rejects deployment targets below iOS 15; several pods
+    # (and their privacy/resource bundle targets) still declare 9.0–13.4.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.1
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        end
+      end
+    end
+
     # fmt 11.0.2's consteval-based format-string constructor fails to
     # compile under newer Clang (Xcode 26 / Clang 21) with "call to
     # consteval function ... is not a constant expression". base.h
