@@ -3213,6 +3213,34 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RNPermissions (5.6.3):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - RNReanimated (4.3.0):
     - boost
     - DoubleConversion
@@ -3561,6 +3589,7 @@ DEPENDENCIES:
   - "RNFBCrashlytics (from `../node_modules/@react-native-firebase/crashlytics`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNLocalize (from `../node_modules/react-native-localize`)
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
@@ -3789,6 +3818,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNLocalize:
     :path: "../node_modules/react-native-localize"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -3819,7 +3850,7 @@ SPEC CHECKSUMS:
   GoogleAppMeasurement: 57270ccc2b77472d7e85c4cbe45972564eff78bb
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
   GoogleUtilities: 4e0c2ad9fa0d0d18b5c4df8bf57b461cba35b0bb
-  hermes-engine: 3c1e9314ab8072c87540e097f2ad2de7c57b1edc
+  hermes-engine: 8f0d72c7e1103ebc98caa3759e542ff7e5379a91
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   NitroModules: 1ef0796714251dbdaea49af187e291d8b6a7c5ea
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
@@ -3915,6 +3946,7 @@ SPEC CHECKSUMS:
   RNFBCrashlytics: 6fafdfa010ab76faa22d8ff5d98f7eaf8f3f2fe9
   RNGestureHandler: d7ebd5abfdf03ddebef995d2f828a9f07fca7990
   RNLocalize: 1aedbc2c15073861a364174919d23c31c5924b16
+  RNPermissions: 8bf1d878475f7f7e8b5d451e21d82c589d81a0dc
   RNReanimated: 4e6187f2ba1e30e6ddc7c8fc9f19b2dd2b6b2532
   RNScreens: 7f643ee0fd1407dc5085c7795460bd93da113b8f
   RNWorklets: 534af667da0c0049e0060ae43f03c7df8cc9a6e0
@@ -3922,6 +3954,6 @@ SPEC CHECKSUMS:
   SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
   Yoga: 6ca93c8c13f56baeec55eb608577619b17a4d64e
 
-PODFILE CHECKSUM: 30119bb0bd17ea70eea491212a59056d2916fa02
+PODFILE CHECKSUM: 8195426b8865b8db854d0355a1efecf084ce11aa
 
 COCOAPODS: 1.15.2

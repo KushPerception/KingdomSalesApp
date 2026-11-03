@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from 'react-native';
 import {
   pick,
@@ -16,6 +18,7 @@ import {
   isErrorWithCode,
   errorCodes,
 } from '@react-native-documents/picker';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { primaryColor } from '../../../utility/colors';
 import { AttachmentRow } from '../../CommonComponents/AttachmentsList';
@@ -149,7 +152,33 @@ const MaterialRequestAttachment = props => {
     }
   };
 
-  const pickFromCamera = () => {
+  const ensureCameraPermission = async () => {
+    const permission =
+      Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
+    let status = await check(permission);
+    if (status === RESULTS.DENIED) {
+      status = await request(permission);
+    }
+    if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) {
+      return true;
+    }
+    if (status === RESULTS.UNAVAILABLE) {
+      Alert.alert('Camera unavailable', 'This device has no available camera.');
+    } else {
+      Alert.alert(
+        'Camera permission required',
+        'Please allow camera access in Settings to take photos.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ],
+      );
+    }
+    return false;
+  };
+
+  const pickFromCamera = async () => {
+    if (!(await ensureCameraPermission())) return;
     launchCamera({ mediaType: 'photo', quality: 0.8 }, response => {
       if (response.didCancel) return;
       if (response.errorCode) {
