@@ -1,7 +1,7 @@
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import React, {Fragment, useEffect, useRef, useState} from 'react';
-import {Alert, BackHandler} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { Fragment, useEffect, useRef } from 'react';
+import { Alert, BackHandler } from 'react-native';
 import AddNewCustomer from '../Screens/MainComponents/AddNewCustomer/AddNewCustomer';
 import ProductInvoice from '../Screens/MainComponents/AddProduct/ProductInvoice';
 import ChangePassword from '../Screens/MainComponents/Auth/ChangePassword';
@@ -32,57 +32,80 @@ import CashReceipt from '../Screens/MainComponents/Home/CashReceipt';
 import DriverCashReceipt from '../Screens/MainComponents/Home/DriverCashReceipt';
 import CreateCashReceipt from '../Screens/MainComponents/Home/CreateCashReceipt';
 import EditCashReceipt from '../Screens/MainComponents/Home/EditCashReceipt';
+import MaterialRequestList from '../Screens/MainComponents/MaterialRequest/MaterialRequestList';
+import MaterialRequestForm from '../Screens/MainComponents/MaterialRequest/MaterialRequestForm';
+import MaterialRequestItems from '../Screens/MainComponents/MaterialRequest/MaterialRequestItems';
+import MaterialRequestStockPicker from '../Screens/MainComponents/MaterialRequest/MaterialRequestStockPicker';
+import MaterialRequestAttachment from '../Screens/MainComponents/MaterialRequest/MaterialRequestAttachment';
+import PurchaseManager from '../Screens/MainComponents/PurchaseManager/PurchaseManagerRole/PurchaseManager';
+import PMCommonScreen from '../Screens/MainComponents/PurchaseManager/Shared/PMCommonScreen';
+import PurchaseOrderScreen from '../Screens/MainComponents/PurchaseManager/CeoMdRole/PurchaseOrderScreen';
+import CostController from '../Screens/MainComponents/CostController/CostController';
+import CreateLandingCost from '../Screens/MainComponents/CostController/CreateLandingCost';
+import SupplierPickerScreen from '../Screens/MainComponents/CostController/SupplierPickerScreen';
 
 const Stack = createStackNavigator();
 
+const EXIT_CONFIRM_SCREENS = [
+  'Home',
+  'DriverOrderList',
+  'DriverOrders',
+  'MaterialRequestList',
+  'PurchaseManager',
+  'PurchaseOrderScreen',
+  'CostController',
+  'Login',
+];
+
 const AppNavigator = () => {
-  const [CurrentScreen, setCurrentScreen] = useState(null);
-  const [PreviousScreen, setPreviousScreen] = useState(null);
-
-  const backAction = () => {
-    if (
-      CurrentScreen === 'Home' ||
-      CurrentScreen === 'DriverOrderList' ||
-      CurrentScreen === 'Login'
-    ) {
-      Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [
-        {text: 'Cancel', onPress: () => null, style: 'cancel'},
-        {text: 'YES', onPress: () => BackHandler.exitApp()},
-      ]);
-      return true;
-    }
-  };
-
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => subscription.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [CurrentScreen, PreviousScreen]);
-
   const navigationRef = useRef();
   const routeNameRef = useRef();
+
+  useEffect(() => {
+    const backAction = () => {
+      const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+      console.log(
+        '[AppNavigation] hardwareBackPress, currentRouteName =',
+        currentRouteName,
+      );
+      if (EXIT_CONFIRM_SCREENS.includes(currentRouteName)) {
+        Alert.alert('Hold on!', 'Are you sure you want to Exit the App?', [
+          { text: 'Cancel', onPress: () => null, style: 'cancel' },
+          { text: 'YES', onPress: () => BackHandler.exitApp() },
+        ]);
+        return true;
+      }
+      if (navigationRef.current?.canGoBack()) {
+        navigationRef.current.goBack();
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+    return () => subscription.remove();
+  }, []);
 
   return (
     <Fragment>
       <NavigationContainer
         ref={navigationRef}
         onReady={() =>
-          (routeNameRef.current =
-            navigationRef.current.getCurrentRoute().name)
+          (routeNameRef.current = navigationRef.current.getCurrentRoute().name)
         }
-        onStateChange={async () => {
-          const previousRouteName = routeNameRef.current;
-          const currentRouteName =
-            navigationRef.current.getCurrentRoute().name;
-          setCurrentScreen(currentRouteName);
-          setPreviousScreen(previousRouteName);
-          routeNameRef.current = currentRouteName;
-        }}>
+        onStateChange={() => {
+          routeNameRef.current = navigationRef.current.getCurrentRoute().name;
+        }}
+      >
         {/* headerMode="none" was removed in React Navigation 6+.
             Use screenOptions={{ headerShown: false }} instead. */}
         <Stack.Navigator
           initialRouteName="Splash"
-          screenOptions={{headerShown: false}}>
+          screenOptions={{ headerShown: false }}
+        >
           <Stack.Screen name="Splash" component={Splash} />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Login" component={Login} />
@@ -105,10 +128,7 @@ const AppNavigator = () => {
           />
           <Stack.Screen name="DelieveryNote" component={DelieveryNote} />
           <Stack.Screen name="UpdateOrders" component={UpdateOrders} />
-          <Stack.Screen
-            name="OrderHtmlInvoice"
-            component={OrderHtmlInvoice}
-          />
+          <Stack.Screen name="OrderHtmlInvoice" component={OrderHtmlInvoice} />
           <Stack.Screen name="NeedAReciept" component={NeedAReciept} />
           <Stack.Screen name="PdfView" component={PdfView} />
           <Stack.Screen name="ResetMPIN" component={ResetMPIN} />
@@ -131,6 +151,41 @@ const AppNavigator = () => {
             component={OrderHtmlInvoiceSales}
           />
           <Stack.Screen name="ProductInvoice" component={ProductInvoice} />
+          <Stack.Screen
+            name="MaterialRequestList"
+            component={MaterialRequestList}
+          />
+          <Stack.Screen
+            name="MaterialRequestForm"
+            component={MaterialRequestForm}
+          />
+          <Stack.Screen
+            name="MaterialRequestItems"
+            component={MaterialRequestItems}
+          />
+          <Stack.Screen
+            name="MaterialRequestStockPicker"
+            component={MaterialRequestStockPicker}
+          />
+          <Stack.Screen
+            name="MaterialRequestAttachment"
+            component={MaterialRequestAttachment}
+          />
+          <Stack.Screen name="PurchaseManager" component={PurchaseManager} />
+          <Stack.Screen name="PMCommonScreen" component={PMCommonScreen} />
+          <Stack.Screen
+            name="PurchaseOrderScreen"
+            component={PurchaseOrderScreen}
+          />
+          <Stack.Screen name="CostController" component={CostController} />
+          <Stack.Screen
+            name="CreateLandingCost"
+            component={CreateLandingCost}
+          />
+          <Stack.Screen
+            name="SupplierPickerScreen"
+            component={SupplierPickerScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Fragment>

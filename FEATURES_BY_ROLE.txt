@@ -1,0 +1,114 @@
+KINGDOM SALES APP - FEATURES BUILT SO FAR (BY USER ROLE)
+==========================================================
+
+Role -> Landing Screen routing is defined in:
+  Screens/MainComponents/Auth/MPinOtp.js
+
+  Driver          -> DriverOrders
+  REQUESTER       -> MaterialRequestList
+  PURCHASEMANAGER -> PurchaseManager
+  CEO / MD        -> PurchaseOrderScreen (file: PurchaseOrderSceen.js)
+  COSTCONTROLLER  -> CostController
+  (anything else) -> Home
+
+
+----------------------------------------------------------
+REQUESTER -> MaterialRequestList
+----------------------------------------------------------
+- List & search: paginated Material Request list (Load More button),
+  search by MRNO / Division / Dept, date range filter.
+
+- Create MR (3-step wizard):
+  1. MaterialRequest1.js - cascading pickers: Division -> Dept -> Plant
+     -> Equipment, plus Vehicle, Priority, Job Ref No.
+  2. MaterialRequest2.js - line items list (stock code/name, qty,
+     remarks); "+" opens MaterialRequest3.js to search/pick stock items.
+  3. MaterialRequestAttachment.js - attach files (camera / gallery /
+     document picker; type + 10MB size validated) and final submit.
+
+- Edit MR: same 3-step wizard, pre-filled from an existing MR
+  (loaded via getMaterialRequestDetail), with a "discard draft"
+  prompt if the user backs out mid-edit.
+
+- No role/permission checks beyond being the landing screen for
+  this role - all validation is field-level (required fields, qty,
+  remarks, file type/size).
+
+
+----------------------------------------------------------
+PURCHASEMANAGER -> PurchaseManager
+----------------------------------------------------------
+- Two tabs: Quotation and Purchase Order. Each tab has its own
+  filter bar (search-by dropdown + date range + Search/Clear
+  buttons) and its own pagination (onEndReached, 20 items/page).
+
+- Quotation tab:
+  - Expandable MR -> stock -> enquiries view.
+  - Filters: search by MRNO / Stock Code, date range.
+  - Per-enquiry bottom sheet: Enquiry Details, Enquiry Attach,
+    MR Details, MR Attach, Approve.
+
+- Purchase Order tab:
+  - Filters: search by PONO / Department / Supplier, date range,
+    status chips (All / Approved / Rejected).
+  - Bottom sheet: Enquiry Details, MR Details, MR Attach,
+    Purchase Order Details, Purchase Order Attach, Reject, Approve
+    (Approve/Reject open a remarks modal before confirming).
+
+- Shared detail/attachment viewer screen: PMCommonScreen.js
+  (renders Enquiry Details, MR Details, Attachments views depending
+  on which bottom-sheet item was tapped).
+
+
+----------------------------------------------------------
+CEO / MD -> PurchaseOrderScreen (PurchaseOrderSceen.js)
+----------------------------------------------------------
+- Purchase Order list only (no Quotation tab for this role).
+- Brought in line with PurchaseManager's PO tab this session:
+  - Same filter bar: search by PONO / Department / Supplier,
+    date range, status chips (All / Approved / Rejected).
+  - Same pagination (onEndReached, 20 items/page).
+  - Same bottom sheet actions: Enquiry Details, MR Details,
+    MR Attach, Purchase Order Details, Purchase Order Attach,
+    Reject, Approve.
+
+- Fixes made this session:
+  - Added Approve/Reject to this screen (previously only
+    PurchaseManager had them).
+  - Fixed a bug where "Enquiry Details" called the API with an
+    undefined enquiry number (404 "Enquiry not found") - now uses
+    the same PO-scoped endpoint as PurchaseManager
+    (api/purchase-order/{PONO}/eq-details).
+
+
+----------------------------------------------------------
+COSTCONTROLLER -> CostController
+----------------------------------------------------------
+- Paginated Landing Cost list (onEndReached), refreshes whenever
+  the screen regains focus.
+
+- Create / Edit Landing Cost (CreateLandingCost.js):
+  - Supplier picker (SupplierPickerScreen.js - searchable,
+    paginated supplier list).
+  - PO picker, dependent on the selected supplier.
+  - Cost category picker, Cost + VAT% fields (VAT amount
+    auto-computed from cost x VAT%).
+  - Save (new) / Update (existing) actions.
+
+- Posted-record lock: once a record's POSTED flag is set, the
+  entire form becomes read-only (inputs disabled, Save button
+  hidden, "Posted - editing is disabled" banner shown). This is a
+  status-based lock, not a role-based one.
+
+- Draft handling: backing out of an unsaved new record prompts to
+  discard and cancels the draft on the server.
+
+
+----------------------------------------------------------
+FLAGGED - NOT PART OF WORK DONE THIS SESSION
+----------------------------------------------------------
+- Screens/MainComponents/PurchaseManager/MRDetailScreen.js is NOT
+  registered in the navigator (Navigation/AppNavigation.js) and is
+  not referenced by any other screen. It looks like dead/orphaned
+  code from an earlier iteration. Worth confirming with the team
+  whether it should be wired up or removed.

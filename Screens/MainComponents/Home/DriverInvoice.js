@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import Pdf from "react-native-pdf";
-import RNFetchBlob from "rn-fetch-blob";
+import RNFetchBlob from "react-native-blob-util";
 import { GetCurrentDriveOrderItemInvoice } from "../../../utility/ApiHelpers/StagingApis";
 import { W, fonts } from "../../../utility/GlobalStyles";
 import {
