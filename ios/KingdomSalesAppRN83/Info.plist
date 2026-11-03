@@ -33,8 +33,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>K-Sales needs camera access so you can take photos to attach to material requests.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>K-Sales needs photo library access so you can attach existing photos to material requests.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

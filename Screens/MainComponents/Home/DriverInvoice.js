@@ -82,7 +82,7 @@ const DriverInvoice = (props) => {
   };
 
   const checkPermission = async () => {
-    if (Platform.OS === "ios") {
+    if (Platform.OS === "ios" || Platform.Version >= 29) {
       downloadFile();
     } else {
       try {

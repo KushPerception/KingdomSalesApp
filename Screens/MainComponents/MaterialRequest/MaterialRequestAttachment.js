@@ -151,7 +151,16 @@ const MaterialRequestAttachment = props => {
 
   const pickFromCamera = () => {
     launchCamera({ mediaType: 'photo', quality: 0.8 }, response => {
-      if (response.didCancel || response.errorCode) return;
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        Alert.alert(
+          'Camera unavailable',
+          response.errorCode === 'permission'
+            ? 'Camera permission is denied. Please enable it in Settings > K-Sales.'
+            : response.errorMessage ?? 'Unable to open the camera.',
+        );
+        return;
+      }
       const asset = response.assets?.[0];
       if (asset) {
         addPickedAsset(asset, `photo_${Date.now()}.jpg`);
