@@ -229,6 +229,7 @@ export const getMaterialRequestStocks = async (
 };
 
 const getAttachmentMimeType = file => {
+  if (file.type === 'image/jpg') return 'image/jpeg';
   if (file.type && file.type !== 'application/octet-stream') return file.type;
   const ext = file.name?.split('.').pop()?.toLowerCase();
   const map = {
@@ -270,42 +271,98 @@ export const uploadMaterialRequestAttachment = async (
     ? file.uri
     : `file://${file.uri}`;
   const filePath = fileUri.replace('file://', '');
+  const tag = '[MR Attachment Upload]';
+
+  console.log(tag, 'start', {
+    url,
+    mrNo,
+    name: file.name,
+    mimeType,
+    declaredType: file.type,
+    declaredSize: file.size,
+    description: file.description,
+    filePath,
+  });
 
   let stat;
   try {
     stat = await RNBlobUtil.fs.stat(filePath);
+    console.log(tag, 'file stat', { name: file.name, size: stat?.size });
   } catch (e) {
+    console.error(tag, 'file stat failed', {
+      name: file.name,
+      filePath,
+      error: e?.message ?? String(e),
+    });
     throw new Error(
       `${file.name} is no longer available on this device. Please remove and re-add it.`,
     );
   }
   if (!stat || Number(stat.size) <= 0) {
+    console.error(tag, 'file empty', { name: file.name, filePath, stat });
     throw new Error(
       `${file.name} appears to be empty. Please remove and re-add it.`,
     );
   }
 
-  const res = await RNBlobUtil.fetch(
-    'POST',
-    url,
-    { Authorization: 'Bearer ' + userToken },
-    [
-      {
-        name: 'attachment',
-        filename: file.name,
-        type: mimeType,
-        data: RNBlobUtil.wrap(filePath),
-      },
-      {
-        name: 'description',
-        data: file.description ?? '',
-      },
-    ],
-  );
+  const formData = new FormData();
+  formData.append('attachment', {
+    uri: fileUri,
+    name: file.name,
+    type: mimeType,
+  });
+  formData.append('description', file.description ?? '');
 
-  const status = res.respInfo.status;
-  if (status !== 200 && status !== 201) {
-    throw new Error(`Upload failed for ${file.name}: ${status} ${res.data}`);
+  let status;
+  let body;
+  let headers;
+  try {
+    // Do not set Content-Type manually: fetch must add the multipart boundary.
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + userToken,
+        Accept: 'application/json',
+      },
+      body: formData,
+    });
+    status = res.status;
+    headers = res.headers?.map ?? undefined;
+    body = await res.text();
+  } catch (e) {
+    console.error(tag, 'network/request error', {
+      name: file.name,
+      url,
+      error: e?.message ?? String(e),
+    });
+    throw new Error(
+      `Upload failed for ${file.name}: network error (${e?.message ?? e})`,
+    );
   }
+
+  console.log(tag, 'response', {
+    name: file.name,
+    status,
+    headers,
+    body: body?.slice?.(0, 1000),
+  });
+  if (status !== 200 && status !== 201) {
+    let serverMessage = body;
+    try {
+      const parsed = JSON.parse(body);
+      serverMessage =
+        parsed?.message ??
+        (parsed?.errors ? JSON.stringify(parsed.errors) : body);
+    } catch (e) {}
+    console.error(tag, 'FAILED', {
+      name: file.name,
+      status,
+      serverMessage: String(serverMessage).slice(0, 500),
+    });
+    throw new Error(
+      `${file.name} (HTTP ${status}): ${String(serverMessage).slice(0, 200)}`,
+    );
+  }
+  console.log(tag, 'success', { name: file.name, status });
   return true;
 };

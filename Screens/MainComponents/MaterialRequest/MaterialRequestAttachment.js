@@ -179,7 +179,7 @@ const MaterialRequestAttachment = props => {
 
   const pickFromCamera = async () => {
     if (!(await ensureCameraPermission())) return;
-    launchCamera({ mediaType: 'photo', quality: 0.8 }, response => {
+    launchCamera({ mediaType: 'photo', quality: 0.7, maxWidth: 1600, maxHeight: 1600 }, response => {
       if (response.didCancel) return;
       if (response.errorCode) {
         Alert.alert(
@@ -198,7 +198,7 @@ const MaterialRequestAttachment = props => {
   };
 
   const pickFromGallery = () => {
-    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, response => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.7, maxWidth: 1600, maxHeight: 1600 }, response => {
       if (response.didCancel || response.errorCode) return;
       const asset = response.assets?.[0];
       if (asset) {
@@ -275,6 +275,14 @@ const MaterialRequestAttachment = props => {
           );
         } catch (e) {
           const errorMessage = e?.message ?? 'Upload failed';
+          console.error('[MR Attachment] upload failed', {
+            mrNo,
+            file: file.name,
+            uri: file.uri,
+            size: file.size,
+            type: file.type,
+            error: errorMessage,
+          });
           setFiles(prev =>
             prev.map(f =>
               f.uri === file.uri
@@ -287,7 +295,7 @@ const MaterialRequestAttachment = props => {
                 : f,
             ),
           );
-          failedFileNames.push(file.name);
+          failedFileNames.push(`${file.name} — ${errorMessage}`);
         }
       }
 
